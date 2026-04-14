@@ -164,6 +164,46 @@
           <p id="photoMessage" class="message" hidden></p>
           <ul id="photosList" class="photo-list"></ul>
         </section>
+
+        <section id="petPanel" class="panel">
+          <div class="section-heading">
+            <h2>分數與寵物</h2>
+            <p>兩人共享的分數與寵物狀態。</p>
+          </div>
+
+          <dl class="meta-list">
+            <div><dt>分數</dt><dd id="scoreValue">—</dd></div>
+            <div><dt>寵物名稱</dt><dd id="petName">—</dd></div>
+            <div><dt>等級</dt><dd id="petLevel">—</dd></div>
+            <div><dt>Exp</dt><dd id="petExp">—</dd></div>
+            <div><dt>外觀</dt><dd id="petSkin">—</dd></div>
+          </dl>
+
+          <div class="stack">
+            <div class="button-row">
+              <button id="addScoreButton" type="button">+10 分</button>
+              <button id="addExpButton" type="button">寵物 +5 exp</button>
+            </div>
+
+            <label class="field">
+              <span>寵物名稱</span>
+              <input id="petNameInput" type="text" placeholder="輸入新名稱" />
+            </label>
+            <button id="savePetNameButton" type="button" class="secondary-button">儲存名稱</button>
+
+            <label class="field">
+              <span>外觀</span>
+              <select id="petSkinSelect">
+                <option value="default">default</option>
+                <option value="gold">gold</option>
+                <option value="dark">dark</option>
+              </select>
+            </label>
+            <button id="savePetSkinButton" type="button" class="secondary-button">儲存外觀</button>
+          </div>
+
+          <p id="petMessage" class="message" hidden></p>
+        </section>
       </section>
     </main>
 

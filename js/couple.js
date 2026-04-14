@@ -74,6 +74,13 @@ async function createCouple() {
       id: pairCode,
       pairCode,
       memberUids: [user.uid],
+      score: 0,
+      pet: {
+        name: 'Star',
+        level: 1,
+        exp: 0,
+        skin: 'default'
+      },
       createdAt: serverTimestamp()
     });
 

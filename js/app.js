@@ -15,6 +15,7 @@ import {
   subscribeToEventsByCouple,
   updateEvent
 } from './events.js';
+import { addScore, updatePetExp, updatePetField } from './pet.js';
 import { subscribeToPhotosByCouple, uploadPhoto } from './photos.js';
 import {
   clearChildren,
@@ -39,6 +40,8 @@ const state = {
 };
 
 const elements = {
+  addExpButton: document.querySelector('#addExpButton'),
+  addScoreButton: document.querySelector('#addScoreButton'),
   appFirebaseNotice: document.querySelector('#appFirebaseNotice'),
   appStatus: document.querySelector('#appStatus'),
   cancelEditButton: document.querySelector('#cancelEditButton'),
@@ -54,11 +57,21 @@ const elements = {
   memberCountValue: document.querySelector('#memberCountValue'),
   pairActions: document.querySelector('#pairActions'),
   pairCodeValue: document.querySelector('#pairCodeValue'),
+  petExp: document.querySelector('#petExp'),
+  petLevel: document.querySelector('#petLevel'),
+  petMessage: document.querySelector('#petMessage'),
+  petName: document.querySelector('#petName'),
+  petNameInput: document.querySelector('#petNameInput'),
+  petSkin: document.querySelector('#petSkin'),
+  petSkinSelect: document.querySelector('#petSkinSelect'),
   photoFile: document.querySelector('#photoFile'),
   photoForm: document.querySelector('#photoForm'),
   photoMessage: document.querySelector('#photoMessage'),
   photosList: document.querySelector('#photosList'),
+  savePetNameButton: document.querySelector('#savePetNameButton'),
+  savePetSkinButton: document.querySelector('#savePetSkinButton'),
   saveEventButton: document.querySelector('#saveEventButton'),
+  scoreValue: document.querySelector('#scoreValue'),
   userEmail: document.querySelector('#userEmail')
 };
 
@@ -101,6 +114,28 @@ function renderPhotoEmptyState(message) {
   item.className = 'photo-card muted-text';
   item.textContent = message;
   elements.photosList.appendChild(item);
+}
+
+function renderPet() {
+  const couple = state.couple;
+
+  if (!couple) {
+    elements.scoreValue.textContent = '—';
+    elements.petName.textContent = '—';
+    elements.petLevel.textContent = '—';
+    elements.petExp.textContent = '—';
+    elements.petSkin.textContent = '—';
+    return;
+  }
+
+  elements.scoreValue.textContent = couple.score ?? 0;
+
+  const pet = couple.pet || {};
+
+  elements.petName.textContent = pet.name || '—';
+  elements.petLevel.textContent = pet.level ?? '—';
+  elements.petExp.textContent = pet.exp ?? '—';
+  elements.petSkin.textContent = pet.skin || '—';
 }
 
 function renderEvents() {
@@ -247,6 +282,7 @@ function syncCoupleSubscriptions(coupleId) {
     state.events = [];
     state.photos = [];
     renderCoupleState();
+    renderPet();
     renderEvents();
     renderPhotos();
     return;
@@ -255,6 +291,7 @@ function syncCoupleSubscriptions(coupleId) {
   state.unsubscribeCouple = subscribeToCouple(coupleId, (couple) => {
     state.couple = couple;
     renderCoupleState();
+    renderPet();
   });
 
   state.unsubscribeEvents = subscribeToEventsByCouple(coupleId, (events) => {
@@ -432,6 +469,61 @@ function bindEvents() {
   elements.createCoupleButton.addEventListener('click', handleCreateCouple);
   elements.joinCoupleForm.addEventListener('submit', handleJoinCouple);
   elements.eventForm.addEventListener('submit', handleEventSubmit);
+  elements.addScoreButton.addEventListener('click', async () => {
+    if (!state.profile?.coupleId) {
+      return;
+    }
+
+    try {
+      await addScore(state.profile.coupleId, 10);
+    } catch (error) {
+      setMessage(elements.petMessage, error.message, 'error');
+    }
+  });
+  elements.addExpButton.addEventListener('click', async () => {
+    if (!state.profile?.coupleId) {
+      return;
+    }
+
+    try {
+      await updatePetExp(state.profile.coupleId, 5);
+    } catch (error) {
+      setMessage(elements.petMessage, error.message, 'error');
+    }
+  });
+  elements.savePetNameButton.addEventListener('click', async () => {
+    if (!state.profile?.coupleId) {
+      return;
+    }
+
+    const name = elements.petNameInput.value.trim();
+
+    if (!name) {
+      return;
+    }
+
+    try {
+      await updatePetField(state.profile.coupleId, { name });
+      elements.petNameInput.value = '';
+      setMessage(elements.petMessage, '名稱已更新。', 'success');
+    } catch (error) {
+      setMessage(elements.petMessage, error.message, 'error');
+    }
+  });
+  elements.savePetSkinButton.addEventListener('click', async () => {
+    if (!state.profile?.coupleId) {
+      return;
+    }
+
+    const skin = elements.petSkinSelect.value;
+
+    try {
+      await updatePetField(state.profile.coupleId, { skin });
+      setMessage(elements.petMessage, '外觀已更新。', 'success');
+    } catch (error) {
+      setMessage(elements.petMessage, error.message, 'error');
+    }
+  });
   elements.cancelEditButton.addEventListener('click', () => {
     resetEventForm();
     setMessage(elements.eventMessage, '已取消編輯。', 'info');
@@ -475,5 +567,6 @@ resetEventForm();
 renderCoupleState();
 renderEvents();
 renderPhotos();
+renderPet();
 bindEvents();
 startAuthGuard();
