@@ -2,7 +2,7 @@ import {
   getApp,
   getApps,
   initializeApp
-} from 'https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js';
+} from 'https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js';
 import {
   browserLocalPersistence,
   createUserWithEmailAndPassword,
@@ -11,7 +11,7 @@ import {
   setPersistence,
   signInWithEmailAndPassword,
   signOut
-} from 'https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js';
+} from 'https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js';
 import {
   Timestamp,
   addDoc,
@@ -29,24 +29,23 @@ import {
   setDoc,
   updateDoc,
   where
-} from 'https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js';
+} from 'https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js';
 import {
   getDownloadURL,
   getStorage,
   ref,
   uploadBytes
-} from 'https://www.gstatic.com/firebasejs/12.7.0/firebase-storage.js';
+} from 'https://www.gstatic.com/firebasejs/12.12.0/firebase-storage.js';
 
-// Paste your Firebase Web app config here before testing the app.
-// Firebase Console -> Project settings -> General -> Your apps -> SDK setup and config.
+// Firebase Web app config for the star-app-5fbaa project.
 const firebaseConfig = {
-  apiKey: 'REPLACE_WITH_API_KEY',
-  authDomain: 'REPLACE_WITH_AUTH_DOMAIN',
-  projectId: 'REPLACE_WITH_PROJECT_ID',
-  storageBucket: 'REPLACE_WITH_STORAGE_BUCKET',
-  messagingSenderId: 'REPLACE_WITH_MESSAGING_SENDER_ID',
-  appId: 'REPLACE_WITH_APP_ID',
-  // measurementId: 'REPLACE_WITH_MEASUREMENT_ID'
+  apiKey: 'AIzaSyDEbf7BsrbxH8FhQS5svTIFYwKr62EseVA',
+  authDomain: 'star-app-5fbaa.firebaseapp.com',
+  projectId: 'star-app-5fbaa',
+  storageBucket: 'star-app-5fbaa.firebasestorage.app',
+  messagingSenderId: '30205271104',
+  appId: '1:30205271104:web:957f78a86b7fe5d56d53a5',
+  measurementId: 'G-57MV15RWRD'
 };
 
 const REQUIRED_CONFIG_FIELDS = [
@@ -64,7 +63,7 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 
 function hasRealConfigValue(value) {
-  return typeof value === 'string' && value.trim() !== '' && !value.startsWith('REPLACE_WITH_');
+  return typeof value === 'string' && value.trim() !== '';
 }
 
 function getMissingFirebaseConfigFields() {
@@ -81,11 +80,12 @@ function ensureFirebaseConfigured() {
   }
 
   const missingFields = getMissingFirebaseConfigFields().join(', ');
-  throw new Error(`Fill firebaseConfig in js/firebase.js before using the app. Missing: ${missingFields}`);
+  throw new Error(`Firebase config in js/firebase.js is incomplete. Missing: ${missingFields}`);
 }
 
 export {
   addDoc,
+  app,
   auth,
   browserLocalPersistence,
   collection,

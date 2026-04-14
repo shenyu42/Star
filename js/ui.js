@@ -92,7 +92,7 @@ function renderFirebaseNotice(element, missingFields) {
 
   setMessage(
     element,
-    `Before testing, fill firebaseConfig in js/firebase.js. Missing fields: ${missingFields.join(', ')}`,
+    `Firebase config in js/firebase.js is incomplete. Missing fields: ${missingFields.join(', ')}`,
     'warning'
   );
 }
