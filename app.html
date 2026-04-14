@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Star Couple App</title>
+    <meta
+      name="description"
+      content="Authenticated app page for the Star Couple App MVP."
+    />
+    <link rel="stylesheet" href="./css/main.css" />
+  </head>
+  <body class="page">
+    <main class="page-shell app-shell">
+      <header class="panel topbar">
+        <div>
+          <p class="eyebrow">App</p>
+          <h1 class="page-title">Shared space</h1>
+        </div>
+
+        <div class="topbar-actions">
+          <div class="user-card">
+            <span class="user-label">Signed in as</span>
+            <strong id="userEmail">Loading...</strong>
+          </div>
+          <button id="logoutButton" class="secondary-button" type="button">
+            Sign out
+          </button>
+        </div>
+      </header>
+
+      <p id="appStatus" class="message" hidden></p>
+      <p id="appFirebaseNotice" class="message" hidden></p>
+
+      <section class="app-grid">
+        <section class="panel">
+          <div class="section-heading">
+            <h2>Couple status</h2>
+            <p>Create a pair or join one with a pair code.</p>
+          </div>
+
+          <dl class="meta-list">
+            <div>
+              <dt>Status</dt>
+              <dd id="coupleStatusText">Checking...</dd>
+            </div>
+            <div>
+              <dt>Pair code</dt>
+              <dd id="pairCodeValue">Not available yet</dd>
+            </div>
+            <div>
+              <dt>Members</dt>
+              <dd id="memberCountValue">0</dd>
+            </div>
+          </dl>
+
+          <div id="pairActions" class="stack">
+            <button id="createCoupleButton" type="button">
+              Create couple
+            </button>
+
+            <form id="joinCoupleForm" class="stack">
+              <label class="field">
+                <span>Join with pair code</span>
+                <input
+                  id="pairCodeInput"
+                  name="pairCode"
+                  type="text"
+                  placeholder="Enter pair code"
+                  autocomplete="off"
+                  maxlength="12"
+                  required
+                />
+              </label>
+
+              <button type="submit" class="secondary-button">
+                Join couple
+              </button>
+            </form>
+          </div>
+
+          <p id="coupleMessage" class="message" hidden></p>
+        </section>
+
+        <section id="eventPanel" class="panel">
+          <div class="section-heading">
+            <h2>Events</h2>
+            <p>Both members see the same event data from Firestore.</p>
+          </div>
+
+          <form id="eventForm" class="stack">
+            <input id="eventId" name="eventId" type="hidden" />
+
+            <label class="field">
+              <span>Title</span>
+              <input
+                id="eventTitle"
+                name="title"
+                type="text"
+                placeholder="Movie night"
+                required
+              />
+            </label>
+
+            <div class="field-row">
+              <label class="field">
+                <span>Start</span>
+                <input id="eventStartAt" name="startAt" type="datetime-local" required />
+              </label>
+
+              <label class="field">
+                <span>End</span>
+                <input id="eventEndAt" name="endAt" type="datetime-local" />
+              </label>
+            </div>
+
+            <label class="checkbox">
+              <input id="eventAllDay" name="allDay" type="checkbox" />
+              <span>All day event</span>
+            </label>
+
+            <label class="field">
+              <span>Note</span>
+              <textarea
+                id="eventNote"
+                name="note"
+                rows="4"
+                placeholder="Optional notes"
+              ></textarea>
+            </label>
+
+            <div class="button-row">
+              <button id="saveEventButton" type="submit">Save event</button>
+              <button
+                id="cancelEditButton"
+                class="secondary-button"
+                type="button"
+                hidden
+              >
+                Cancel edit
+              </button>
+            </div>
+          </form>
+
+          <p id="eventMessage" class="message" hidden></p>
+          <ul id="eventsList" class="item-list"></ul>
+        </section>
+
+        <section id="photoPanel" class="panel">
+          <div class="section-heading">
+            <h2>Photos</h2>
+            <p>Images are stored in Firebase Storage and indexed in Firestore.</p>
+          </div>
+
+          <form id="photoForm" class="stack">
+            <label class="field">
+              <span>Select image</span>
+              <input id="photoFile" name="photo" type="file" accept="image/*" required />
+            </label>
+
+            <button type="submit">Upload photo</button>
+          </form>
+
+          <p id="photoMessage" class="message" hidden></p>
+          <ul id="photosList" class="photo-list"></ul>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="./js/app.js"></script>
+  </body>
+</html>

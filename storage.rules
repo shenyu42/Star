@@ -1,0 +1,27 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isCurrentUsersCouple(coupleId) {
+      return isSignedIn()
+        && firestore.exists(/databases/(default)/documents/users/$(request.auth.uid))
+        && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.coupleId == coupleId;
+    }
+
+    match /photos/{coupleId}/{fileName} {
+      allow read: if isCurrentUsersCouple(coupleId);
+
+      allow create: if isCurrentUsersCouple(coupleId)
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+
+      allow update: if false;
+
+      allow delete: if isCurrentUsersCouple(coupleId);
+    }
+  }
+}

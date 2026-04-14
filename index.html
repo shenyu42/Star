@@ -3,40 +3,106 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>star</title>
+    <title>Star Couple App</title>
     <meta
       name="description"
-      content="A lightweight GitHub Pages site for the star project."
+      content="Stage 1 MVP for a couple sharing app built with Firebase and deployed on GitHub Pages."
     />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="./css/main.css" />
   </head>
-  <body>
-    <main class="shell">
-      <section class="hero">
-        <p class="eyebrow">GitHub Pages</p>
-        <h1>star</h1>
+  <body class="page">
+    <main class="page-shell">
+      <section class="hero panel">
+        <p class="eyebrow">Stage 1 MVP</p>
+        <h1>Star Couple App</h1>
         <p class="lead">
-          This page is ready to publish as a lightweight GitHub Pages site.
+          Register, sign in, create a couple, share events, and upload photos.
         </p>
-        <p class="subcopy">
-          Once the repository is created and pushed, the site can go live right away.
+        <p class="supporting-copy">
+          This version stays intentionally small so it works cleanly on GitHub
+          Pages with plain HTML, CSS, and JavaScript modules.
         </p>
+        <p id="firebaseNotice" class="message" hidden></p>
       </section>
 
-      <section class="card-grid">
-        <article class="card">
-          <h2>Lightweight</h2>
-          <p>Plain HTML and CSS keep the first publish simple and fast.</p>
-        </article>
-        <article class="card">
-          <h2>Flexible</h2>
-          <p>Add JavaScript, images, or extra pages later without changing the setup.</p>
-        </article>
-        <article class="card">
-          <h2>Public</h2>
-          <p>After deployment, anyone can open the site from its public GitHub Pages URL.</p>
-        </article>
+      <section class="two-column-grid">
+        <section class="panel">
+          <div class="section-heading">
+            <h2>Create account</h2>
+            <p>Email and password sign up through Firebase Authentication.</p>
+          </div>
+
+          <form id="registerForm" class="stack">
+            <label class="field">
+              <span>Email</span>
+              <input
+                id="registerEmail"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                autocomplete="email"
+                required
+              />
+            </label>
+
+            <label class="field">
+              <span>Password</span>
+              <input
+                id="registerPassword"
+                name="password"
+                type="password"
+                placeholder="At least 6 characters"
+                minlength="6"
+                autocomplete="new-password"
+                required
+              />
+            </label>
+
+            <button type="submit">Create account</button>
+          </form>
+
+          <p id="registerStatus" class="message" hidden></p>
+        </section>
+
+        <section class="panel">
+          <div class="section-heading">
+            <h2>Sign in</h2>
+            <p>Existing users return here and continue from the same account.</p>
+          </div>
+
+          <form id="loginForm" class="stack">
+            <label class="field">
+              <span>Email</span>
+              <input
+                id="loginEmail"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                autocomplete="email"
+                required
+              />
+            </label>
+
+            <label class="field">
+              <span>Password</span>
+              <input
+                id="loginPassword"
+                name="password"
+                type="password"
+                placeholder="Your password"
+                autocomplete="current-password"
+                required
+              />
+            </label>
+
+            <button type="submit">Sign in</button>
+          </form>
+
+          <p id="loginStatus" class="message" hidden></p>
+        </section>
       </section>
     </main>
+
+    <script type="module" src="./js/index.js"></script>
   </body>
 </html>
