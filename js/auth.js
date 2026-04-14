@@ -25,7 +25,7 @@ async function ensureUserProfile(user) {
   ensureFirebaseConfigured();
 
   if (!user) {
-    throw new Error('You must be signed in.');
+    throw new Error('請先登入。');
   }
 
   const userRef = doc(db, 'users', user.uid);
@@ -111,7 +111,7 @@ function requireCurrentUser() {
   const user = getCurrentUser();
 
   if (!user) {
-    throw new Error('You must be signed in.');
+    throw new Error('請先登入。');
   }
 
   return user;
@@ -137,11 +137,11 @@ async function requireCurrentUserProfile(expectedCoupleId = null) {
   const profile = await getUserProfile(user.uid);
 
   if (!profile) {
-    throw new Error('User profile was not found.');
+    throw new Error('找不到使用者資料。');
   }
 
   if (expectedCoupleId && profile.coupleId !== expectedCoupleId) {
-    throw new Error('You do not have access to this couple.');
+    throw new Error('你沒有這組情侶資料的存取權限。');
   }
 
   return profile;

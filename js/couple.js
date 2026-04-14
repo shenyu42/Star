@@ -36,7 +36,7 @@ async function getAvailablePairCode() {
     }
   }
 
-  throw new Error('Could not generate a unique pair code. Please try again.');
+  throw new Error('目前無法產生唯一配對碼，請稍後再試。');
 }
 
 async function createCouple() {
@@ -46,7 +46,7 @@ async function createCouple() {
   const profile = await requireCurrentUserProfile();
 
   if (profile.coupleId) {
-    throw new Error('You already belong to a couple.');
+    throw new Error('你已經屬於一組情侶配對。');
   }
 
   const pairCode = await getAvailablePairCode();
@@ -57,17 +57,17 @@ async function createCouple() {
     const freshUserSnapshot = await transaction.get(userRef);
 
     if (!freshUserSnapshot.exists()) {
-      throw new Error('Your user profile is missing.');
+      throw new Error('找不到你的使用者資料。');
     }
 
     if (freshUserSnapshot.data().coupleId) {
-      throw new Error('You already belong to a couple.');
+      throw new Error('你已經屬於一組情侶配對。');
     }
 
     const freshCoupleSnapshot = await transaction.get(coupleRef);
 
     if (freshCoupleSnapshot.exists()) {
-      throw new Error('Pair code collision detected. Please try again.');
+      throw new Error('配對碼發生重複，請再試一次。');
     }
 
     transaction.set(coupleRef, {
@@ -92,13 +92,13 @@ async function joinCoupleByPairCode(pairCodeInput) {
   const profile = await requireCurrentUserProfile();
 
   if (profile.coupleId) {
-    throw new Error('You already belong to a couple.');
+    throw new Error('你已經屬於一組情侶配對。');
   }
 
   const pairCode = normalizePairCode(pairCodeInput);
 
   if (pairCode.length < 6) {
-    throw new Error('Please enter a valid pair code.');
+    throw new Error('請輸入有效的配對碼。');
   }
 
   const userRef = doc(db, 'users', user.uid);
@@ -109,15 +109,15 @@ async function joinCoupleByPairCode(pairCodeInput) {
     const freshCoupleSnapshot = await transaction.get(coupleRef);
 
     if (!freshUserSnapshot.exists()) {
-      throw new Error('Your user profile is missing.');
+      throw new Error('找不到你的使用者資料。');
     }
 
     if (freshUserSnapshot.data().coupleId) {
-      throw new Error('You already belong to a couple.');
+      throw new Error('你已經屬於一組情侶配對。');
     }
 
     if (!freshCoupleSnapshot.exists()) {
-      throw new Error('Pair code was not found.');
+      throw new Error('找不到這組配對碼。');
     }
 
     const couple = freshCoupleSnapshot.data();
@@ -131,7 +131,7 @@ async function joinCoupleByPairCode(pairCodeInput) {
     }
 
     if (memberUids.length >= 2) {
-      throw new Error('This couple already has two members.');
+      throw new Error('這組情侶配對已經有兩位成員。');
     }
 
     transaction.update(coupleRef, {

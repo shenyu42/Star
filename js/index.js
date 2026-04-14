@@ -36,7 +36,7 @@ async function handleRegisterSubmit(event) {
 
   try {
     await register(formData.get('email'), formData.get('password'));
-    setMessage(elements.registerStatus, 'Account created. Redirecting to the app...', 'success');
+    setMessage(elements.registerStatus, '帳號建立成功，正在前往主頁...', 'success');
     redirectTo('./app.html');
   } catch (error) {
     setMessage(elements.registerStatus, error.message, 'error');
@@ -52,7 +52,7 @@ async function handleLoginSubmit(event) {
 
   try {
     await login(formData.get('email'), formData.get('password'));
-    setMessage(elements.loginStatus, 'Signed in. Redirecting to the app...', 'success');
+    setMessage(elements.loginStatus, '登入成功，正在前往主頁...', 'success');
     redirectTo('./app.html');
   } catch (error) {
     setMessage(elements.loginStatus, error.message, 'error');

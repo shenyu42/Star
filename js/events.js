@@ -19,7 +19,7 @@ function buildTimestamp(value) {
   const parsed = new Date(value);
 
   if (Number.isNaN(parsed.getTime())) {
-    throw new Error('Please provide a valid date and time.');
+    throw new Error('請輸入有效的日期與時間。');
   }
 
   return Timestamp.fromDate(parsed);
@@ -51,18 +51,18 @@ function validateEventInput(input) {
   const title = input.title.trim();
 
   if (!title) {
-    throw new Error('Event title is required.');
+    throw new Error('請輸入事件標題。');
   }
 
   if (!input.startAt) {
-    throw new Error('Start time is required.');
+    throw new Error('請輸入開始時間。');
   }
 
   const startAt = buildTimestamp(input.startAt);
   const endAt = input.endAt ? buildTimestamp(input.endAt) : startAt;
 
   if (endAt.toMillis() < startAt.toMillis()) {
-    throw new Error('End time cannot be earlier than start time.');
+    throw new Error('結束時間不能早於開始時間。');
   }
 
   return {

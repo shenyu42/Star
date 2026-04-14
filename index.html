@@ -1,26 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Star Couple App</title>
+    <title>星伴侶共享</title>
     <meta
       name="description"
-      content="Stage 1 MVP for a couple sharing app built with Firebase and deployed on GitHub Pages."
+      content="以雲端服務建置的情侶共享第一階段最小可行版本。"
     />
     <link rel="stylesheet" href="./css/main.css" />
   </head>
   <body class="page">
     <main class="page-shell">
       <section class="hero panel">
-        <p class="eyebrow">Stage 1 MVP</p>
-        <h1>Star Couple App</h1>
+        <p class="eyebrow">第一階段最小可行版</p>
+        <h1>星伴侶共享</h1>
         <p class="lead">
-          Register, sign in, create a couple, share events, and upload photos.
+          註冊、登入、建立情侶配對、共享事件，並上傳照片。
         </p>
         <p class="supporting-copy">
-          This version stays intentionally small so it works cleanly on GitHub
-          Pages with plain HTML, CSS, and JavaScript modules.
+          這個版本先維持最小可行，使用純前端靜態頁面方式實作，
+          讓它能穩定上線並方便後續擴充。
         </p>
         <p id="firebaseNotice" class="message" hidden></p>
       </section>
@@ -28,37 +28,37 @@
       <section class="two-column-grid">
         <section class="panel">
           <div class="section-heading">
-            <h2>Create account</h2>
-            <p>Email and password sign up through Firebase Authentication.</p>
+            <h2>建立帳號</h2>
+            <p>使用電子郵件與密碼完成註冊。</p>
           </div>
 
           <form id="registerForm" class="stack">
             <label class="field">
-              <span>Email</span>
+              <span>電子郵件</span>
               <input
                 id="registerEmail"
                 name="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder="請輸入電子郵件"
                 autocomplete="email"
                 required
               />
             </label>
 
             <label class="field">
-              <span>Password</span>
+              <span>密碼</span>
               <input
                 id="registerPassword"
                 name="password"
                 type="password"
-                placeholder="At least 6 characters"
+                placeholder="至少 6 個字元"
                 minlength="6"
                 autocomplete="new-password"
                 required
               />
             </label>
 
-            <button type="submit">Create account</button>
+            <button type="submit">建立帳號</button>
           </form>
 
           <p id="registerStatus" class="message" hidden></p>
@@ -66,36 +66,36 @@
 
         <section class="panel">
           <div class="section-heading">
-            <h2>Sign in</h2>
-            <p>Existing users return here and continue from the same account.</p>
+            <h2>登入</h2>
+            <p>已經有帳號的使用者可從這裡登入並繼續使用。</p>
           </div>
 
           <form id="loginForm" class="stack">
             <label class="field">
-              <span>Email</span>
+              <span>電子郵件</span>
               <input
                 id="loginEmail"
                 name="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder="請輸入電子郵件"
                 autocomplete="email"
                 required
               />
             </label>
 
             <label class="field">
-              <span>Password</span>
+              <span>密碼</span>
               <input
                 id="loginPassword"
                 name="password"
                 type="password"
-                placeholder="Your password"
+                placeholder="請輸入密碼"
                 autocomplete="current-password"
                 required
               />
             </label>
 
-            <button type="submit">Sign in</button>
+            <button type="submit">登入</button>
           </form>
 
           <p id="loginStatus" class="message" hidden></p>

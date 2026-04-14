@@ -37,7 +37,7 @@ import {
   uploadBytes
 } from 'https://www.gstatic.com/firebasejs/12.12.0/firebase-storage.js';
 
-// Firebase Web app config for the star-app-5fbaa project.
+// 這裡集中管理網站使用的雲端連線設定。
 const firebaseConfig = {
   apiKey: 'AIzaSyDEbf7BsrbxH8FhQS5svTIFYwKr62EseVA',
   authDomain: 'star-app-5fbaa.firebaseapp.com',
@@ -80,7 +80,7 @@ function ensureFirebaseConfigured() {
   }
 
   const missingFields = getMissingFirebaseConfigFields().join(', ');
-  throw new Error(`Firebase config in js/firebase.js is incomplete. Missing: ${missingFields}`);
+  throw new Error(`系統連線設定不完整，缺少欄位：${missingFields}`);
 }
 
 export {

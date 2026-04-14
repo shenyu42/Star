@@ -83,7 +83,7 @@ function resetSubscriptions() {
 function resetEventForm() {
   elements.eventForm.reset();
   elements.eventId.value = '';
-  elements.saveEventButton.textContent = 'Save event';
+  elements.saveEventButton.textContent = '儲存事件';
   elements.cancelEditButton.hidden = true;
 }
 
@@ -107,12 +107,12 @@ function renderEvents() {
   clearChildren(elements.eventsList);
 
   if (!state.profile?.coupleId) {
-    renderEventEmptyState('Create or join a couple before adding events.');
+    renderEventEmptyState('請先建立或加入情侶配對，才能新增事件。');
     return;
   }
 
   if (!state.events.length) {
-    renderEventEmptyState('No events yet. Add your first shared plan above.');
+    renderEventEmptyState('目前還沒有事件，先新增第一個共同計畫吧。');
     return;
   }
 
@@ -142,14 +142,14 @@ function renderEvents() {
     const editButton = document.createElement('button');
     editButton.type = 'button';
     editButton.className = 'secondary-button';
-    editButton.textContent = 'Edit';
+    editButton.textContent = '編輯';
     editButton.dataset.action = 'edit-event';
     editButton.dataset.eventId = eventItem.id;
 
     const deleteButton = document.createElement('button');
     deleteButton.type = 'button';
     deleteButton.className = 'danger-button';
-    deleteButton.textContent = 'Delete';
+    deleteButton.textContent = '刪除';
     deleteButton.dataset.action = 'delete-event';
     deleteButton.dataset.eventId = eventItem.id;
 
@@ -172,12 +172,12 @@ function renderPhotos() {
   clearChildren(elements.photosList);
 
   if (!state.profile?.coupleId) {
-    renderPhotoEmptyState('Create or join a couple before uploading photos.');
+    renderPhotoEmptyState('請先建立或加入情侶配對，才能上傳照片。');
     return;
   }
 
   if (!state.photos.length) {
-    renderPhotoEmptyState('No uploaded photos yet.');
+    renderPhotoEmptyState('目前還沒有上傳任何照片。');
     return;
   }
 
@@ -190,26 +190,26 @@ function renderPhotos() {
 
     const image = document.createElement('img');
     image.src = photoItem.downloadURL;
-    image.alt = photoItem.originalFileName || 'Uploaded photo';
+    image.alt = photoItem.originalFileName || '已上傳照片';
     image.loading = 'lazy';
 
     frame.appendChild(image);
     item.appendChild(frame);
 
     const name = document.createElement('strong');
-    name.textContent = photoItem.originalFileName || 'Uploaded photo';
+    name.textContent = photoItem.originalFileName || '已上傳照片';
     item.appendChild(name);
 
     const meta = document.createElement('p');
     meta.className = 'photo-meta';
-    meta.textContent = `Uploaded ${formatDateTime(photoItem.createdAt)}`;
+    meta.textContent = `上傳時間：${formatDateTime(photoItem.createdAt)}`;
     item.appendChild(meta);
 
     const link = document.createElement('a');
     link.href = photoItem.downloadURL;
     link.target = '_blank';
     link.rel = 'noreferrer';
-    link.textContent = 'Open full image';
+    link.textContent = '開啟原圖';
     item.appendChild(link);
 
     elements.photosList.appendChild(item);
@@ -222,8 +222,8 @@ function renderCoupleState() {
   const configured = isFirebaseConfigured();
 
   if (!coupleId) {
-    elements.coupleStatusText.textContent = 'No couple connected yet';
-    elements.pairCodeValue.textContent = 'Create one first';
+    elements.coupleStatusText.textContent = '尚未建立或加入配對';
+    elements.pairCodeValue.textContent = '請先建立配對';
     elements.memberCountValue.textContent = '0';
     elements.pairActions.hidden = false;
     setFormDisabled(elements.eventForm, true);
@@ -231,7 +231,7 @@ function renderCoupleState() {
     return;
   }
 
-  elements.coupleStatusText.textContent = state.couple ? 'Connected' : 'Couple linked, waiting for data...';
+  elements.coupleStatusText.textContent = state.couple ? '已連結' : '已綁定配對，正在載入資料...';
   elements.pairCodeValue.textContent = coupleId;
   elements.memberCountValue.textContent = String(memberCount);
   elements.pairActions.hidden = true;
@@ -279,7 +279,7 @@ function populateEventForm(eventItem) {
   elements.eventForm.elements.endAt.value = toDatetimeLocalValue(eventItem.endAt);
   elements.eventForm.elements.allDay.checked = Boolean(eventItem.allDay);
   elements.eventForm.elements.note.value = eventItem.note || '';
-  elements.saveEventButton.textContent = 'Update event';
+  elements.saveEventButton.textContent = '更新事件';
   elements.cancelEditButton.hidden = false;
 }
 
@@ -299,7 +299,7 @@ async function handleCreateCouple() {
 
   try {
     const pairCode = await createCouple();
-    setMessage(elements.coupleMessage, `Couple created. Share this pair code: ${pairCode}`, 'success');
+    setMessage(elements.coupleMessage, `情侶配對建立成功，請分享配對碼：${pairCode}`, 'success');
   } catch (error) {
     setMessage(elements.coupleMessage, error.message, 'error');
   }
@@ -314,7 +314,7 @@ async function handleJoinCouple(event) {
   try {
     const pairCode = await joinCoupleByPairCode(formData.get('pairCode'));
     elements.joinCoupleForm.reset();
-    setMessage(elements.coupleMessage, `Joined couple ${pairCode} successfully.`, 'success');
+    setMessage(elements.coupleMessage, `成功加入配對：${pairCode}`, 'success');
   } catch (error) {
     setMessage(elements.coupleMessage, error.message, 'error');
   }
@@ -325,7 +325,7 @@ async function handleEventSubmit(event) {
   setMessage(elements.eventMessage, '', 'info');
 
   if (!state.profile?.coupleId) {
-    setMessage(elements.eventMessage, 'Create or join a couple first.', 'warning');
+    setMessage(elements.eventMessage, '請先建立或加入情侶配對。', 'warning');
     return;
   }
 
@@ -342,10 +342,10 @@ async function handleEventSubmit(event) {
   try {
     if (elements.eventId.value) {
       await updateEvent(elements.eventId.value, payload);
-      setMessage(elements.eventMessage, 'Event updated successfully.', 'success');
+      setMessage(elements.eventMessage, '事件更新成功。', 'success');
     } else {
       await createEvent(payload);
-      setMessage(elements.eventMessage, 'Event created successfully.', 'success');
+      setMessage(elements.eventMessage, '事件建立成功。', 'success');
     }
 
     resetEventForm();
@@ -373,14 +373,14 @@ async function handleEventListClick(event) {
 
     if (eventItem) {
       populateEventForm(eventItem);
-      setMessage(elements.eventMessage, 'Editing event. Save when you are ready.', 'info');
+      setMessage(elements.eventMessage, '已載入事件，修改後記得儲存。', 'info');
     }
 
     return;
   }
 
   if (action === 'delete-event') {
-    const confirmed = window.confirm('Delete this event?');
+    const confirmed = window.confirm('確定要刪除這個事件嗎？');
 
     if (!confirmed) {
       return;
@@ -388,7 +388,7 @@ async function handleEventListClick(event) {
 
     try {
       await deleteEvent(eventId, state.profile?.coupleId);
-      setMessage(elements.eventMessage, 'Event deleted.', 'success');
+      setMessage(elements.eventMessage, '事件已刪除。', 'success');
 
       if (elements.eventId.value === eventId) {
         resetEventForm();
@@ -404,7 +404,7 @@ async function handlePhotoSubmit(event) {
   setMessage(elements.photoMessage, '', 'info');
 
   if (!state.profile?.coupleId) {
-    setMessage(elements.photoMessage, 'Create or join a couple first.', 'warning');
+    setMessage(elements.photoMessage, '請先建立或加入情侶配對。', 'warning');
     return;
   }
 
@@ -413,7 +413,7 @@ async function handlePhotoSubmit(event) {
   try {
     await uploadPhoto(file, state.profile.coupleId);
     elements.photoForm.reset();
-    setMessage(elements.photoMessage, 'Photo uploaded successfully.', 'success');
+    setMessage(elements.photoMessage, '照片上傳成功。', 'success');
   } catch (error) {
     setMessage(elements.photoMessage, error.message, 'error');
   }
@@ -434,7 +434,7 @@ function bindEvents() {
   elements.eventForm.addEventListener('submit', handleEventSubmit);
   elements.cancelEditButton.addEventListener('click', () => {
     resetEventForm();
-    setMessage(elements.eventMessage, 'Edit cancelled.', 'info');
+    setMessage(elements.eventMessage, '已取消編輯。', 'info');
   });
   elements.eventsList.addEventListener('click', handleEventListClick);
   elements.photoForm.addEventListener('submit', handlePhotoSubmit);

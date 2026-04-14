@@ -50,7 +50,7 @@ function formatDateTime(value, allDay = false) {
   const date = toDate(value);
 
   if (!date) {
-    return 'Not set';
+    return '未設定';
   }
 
   const formatter = allDay
@@ -92,7 +92,7 @@ function renderFirebaseNotice(element, missingFields) {
 
   setMessage(
     element,
-    `Firebase config in js/firebase.js is incomplete. Missing fields: ${missingFields.join(', ')}`,
+    `系統連線設定不完整，缺少欄位：${missingFields.join('、')}`,
     'warning'
   );
 }

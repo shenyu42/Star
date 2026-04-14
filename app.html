@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Star Couple App</title>
+    <title>星伴侶共享</title>
     <meta
       name="description"
-      content="Authenticated app page for the Star Couple App MVP."
+      content="星伴侶共享的登入後主頁。"
     />
     <link rel="stylesheet" href="./css/main.css" />
   </head>
@@ -14,17 +14,17 @@
     <main class="page-shell app-shell">
       <header class="panel topbar">
         <div>
-          <p class="eyebrow">App</p>
-          <h1 class="page-title">Shared space</h1>
+          <p class="eyebrow">主頁</p>
+          <h1 class="page-title">共享空間</h1>
         </div>
 
         <div class="topbar-actions">
           <div class="user-card">
-            <span class="user-label">Signed in as</span>
-            <strong id="userEmail">Loading...</strong>
+            <span class="user-label">目前登入</span>
+            <strong id="userEmail">載入中...</strong>
           </div>
           <button id="logoutButton" class="secondary-button" type="button">
-            Sign out
+            登出
           </button>
         </div>
       </header>
@@ -35,38 +35,38 @@
       <section class="app-grid">
         <section class="panel">
           <div class="section-heading">
-            <h2>Couple status</h2>
-            <p>Create a pair or join one with a pair code.</p>
+            <h2>情侶狀態</h2>
+            <p>可以建立一組配對，或透過配對碼加入。</p>
           </div>
 
           <dl class="meta-list">
             <div>
-              <dt>Status</dt>
-              <dd id="coupleStatusText">Checking...</dd>
+              <dt>狀態</dt>
+              <dd id="coupleStatusText">檢查中...</dd>
             </div>
             <div>
-              <dt>Pair code</dt>
-              <dd id="pairCodeValue">Not available yet</dd>
+              <dt>配對碼</dt>
+              <dd id="pairCodeValue">尚未提供</dd>
             </div>
             <div>
-              <dt>Members</dt>
+              <dt>成員數</dt>
               <dd id="memberCountValue">0</dd>
             </div>
           </dl>
 
           <div id="pairActions" class="stack">
             <button id="createCoupleButton" type="button">
-              Create couple
+              建立情侶配對
             </button>
 
             <form id="joinCoupleForm" class="stack">
               <label class="field">
-                <span>Join with pair code</span>
+                <span>輸入配對碼加入</span>
                 <input
                   id="pairCodeInput"
                   name="pairCode"
                   type="text"
-                  placeholder="Enter pair code"
+                  placeholder="請輸入配對碼"
                   autocomplete="off"
                   maxlength="12"
                   required
@@ -74,7 +74,7 @@
               </label>
 
               <button type="submit" class="secondary-button">
-                Join couple
+                加入配對
               </button>
             </form>
           </div>
@@ -84,60 +84,60 @@
 
         <section id="eventPanel" class="panel">
           <div class="section-heading">
-            <h2>Events</h2>
-            <p>Both members see the same event data from Firestore.</p>
+            <h2>共享事件</h2>
+            <p>同一組情侶的兩位成員都會看到相同的共享事件資料。</p>
           </div>
 
           <form id="eventForm" class="stack">
             <input id="eventId" name="eventId" type="hidden" />
 
             <label class="field">
-              <span>Title</span>
+              <span>標題</span>
               <input
                 id="eventTitle"
                 name="title"
                 type="text"
-                placeholder="Movie night"
+                placeholder="例如：電影之夜"
                 required
               />
             </label>
 
             <div class="field-row">
               <label class="field">
-                <span>Start</span>
+                <span>開始時間</span>
                 <input id="eventStartAt" name="startAt" type="datetime-local" required />
               </label>
 
               <label class="field">
-                <span>End</span>
+                <span>結束時間</span>
                 <input id="eventEndAt" name="endAt" type="datetime-local" />
               </label>
             </div>
 
             <label class="checkbox">
               <input id="eventAllDay" name="allDay" type="checkbox" />
-              <span>All day event</span>
+              <span>全天事件</span>
             </label>
 
             <label class="field">
-              <span>Note</span>
+              <span>備註</span>
               <textarea
                 id="eventNote"
                 name="note"
                 rows="4"
-                placeholder="Optional notes"
+                placeholder="可選填備註"
               ></textarea>
             </label>
 
             <div class="button-row">
-              <button id="saveEventButton" type="submit">Save event</button>
+              <button id="saveEventButton" type="submit">儲存事件</button>
               <button
                 id="cancelEditButton"
                 class="secondary-button"
                 type="button"
                 hidden
               >
-                Cancel edit
+                取消編輯
               </button>
             </div>
           </form>
@@ -148,17 +148,17 @@
 
         <section id="photoPanel" class="panel">
           <div class="section-heading">
-            <h2>Photos</h2>
-            <p>Images are stored in Firebase Storage and indexed in Firestore.</p>
+            <h2>照片</h2>
+            <p>圖片會儲存在雲端，並同步把照片資料寫入資料庫。</p>
           </div>
 
           <form id="photoForm" class="stack">
             <label class="field">
-              <span>Select image</span>
+              <span>選擇圖片</span>
               <input id="photoFile" name="photo" type="file" accept="image/*" required />
             </label>
 
-            <button type="submit">Upload photo</button>
+            <button type="submit">上傳照片</button>
           </form>
 
           <p id="photoMessage" class="message" hidden></p>

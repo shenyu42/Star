@@ -43,11 +43,11 @@ function mapSnapshotToPhotos(snapshot) {
 
 function validateImageFile(file) {
   if (!file) {
-    throw new Error('Please choose an image file first.');
+    throw new Error('請先選擇圖片檔案。');
   }
 
   if (!file.type.startsWith('image/')) {
-    throw new Error('Only image files can be uploaded.');
+    throw new Error('只能上傳圖片檔案。');
   }
 }
 
