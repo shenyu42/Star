@@ -325,7 +325,17 @@
                 <p>先建立分類，再把你們的照片收進各自的相簿。</p>
               </div>
 
-              <form id="albumForm" class="album-create-form">
+              <div class="photo-toolbar">
+                <div class="subsection-heading">
+                  <h3>相簿列表</h3>
+                  <p>先看相簿，再決定要把新的照片放進哪一本。</p>
+                </div>
+                <button id="toggleAlbumComposerButton" type="button" class="secondary-button">
+                  新增相簿
+                </button>
+              </div>
+
+              <form id="albumForm" class="album-create-form" hidden>
                 <label class="field">
                   <span>相簿名稱</span>
                   <input
@@ -337,7 +347,7 @@
                     required
                   />
                 </label>
-                <button id="createAlbumButton" type="submit" class="secondary-button">建立相簿</button>
+                <button id="createAlbumButton" type="submit">建立相簿</button>
               </form>
             </div>
 
@@ -354,12 +364,24 @@
                   <span class="mini-label">目前相簿</span>
                   <h3 id="photoAlbumTitle" class="photo-album-title">未分類</h3>
                 </div>
+                <span id="photoAlbumCount" class="photo-count-badge">0 張照片</span>
               </div>
               <p id="photoAlbumHint" class="item-meta">這個相簿裡的照片會同步顯示在兩人的共享空間。</p>
             </div>
 
-          <div class="subcard photo-upload-card">
-            <form id="photoForm" class="stack">
+          <div class="subcard photo-upload-shell">
+            <div class="photo-toolbar compact-photo-toolbar">
+              <div class="upload-copy">
+                <span class="mini-label">上傳照片</span>
+                <strong>這次上傳會自動歸入目前相簿。</strong>
+                <p>不需要重新選分類，直接上傳就會進到這一本。</p>
+              </div>
+              <button id="togglePhotoUploaderButton" type="button" class="secondary-button">
+                上傳到這本相簿
+              </button>
+            </div>
+
+            <form id="photoForm" class="stack" hidden>
               <div class="upload-box">
                 <div class="upload-copy">
                   <span class="mini-label">上傳新照片</span>

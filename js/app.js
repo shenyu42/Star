@@ -26,7 +26,7 @@ import {
   updateEvent
 } from './events.js';
 import { addScore, updatePetExp, updatePetField } from './pet.js';
-import { subscribeToPhotosByAlbum, uploadPhoto } from './photos.js';
+import { subscribeToPhotosByAlbum, subscribeToPhotosByCouple, uploadPhoto } from './photos.js';
 import {
   clearChildren,
   formatDateTime,
@@ -40,12 +40,15 @@ import {
 const state = {
   activeMobileTab: 'overview',
   albums: [],
+  allPhotos: [],
   couple: null,
   currentAlbumId: null,
   currentAlbumView: false,
   events: [],
   hasConfirmedCoupleSnapshot: false,
+  isAlbumComposerOpen: false,
   isEventComposerOpen: false,
+  isPhotoUploaderOpen: false,
   isRepairingCoupleId: false,
   pendingCoupleId: '',
   petAnimation: null,
@@ -58,6 +61,7 @@ const state = {
   unsubscribeAlbums: null,
   unsubscribeCouple: null,
   unsubscribeEvents: null,
+  unsubscribePhotoIndex: null,
   unsubscribePartnerProfile: null,
   unsubscribeProfile: null
 };
@@ -118,6 +122,7 @@ const elements = {
   petSkinSelect: document.querySelector('#petSkinSelect'),
   photoAlbumDetailView: document.querySelector('#photoAlbumDetailView'),
   photoAlbumHint: document.querySelector('#photoAlbumHint'),
+  photoAlbumCount: document.querySelector('#photoAlbumCount'),
   photoAlbumTitle: document.querySelector('#photoAlbumTitle'),
   photoAlbumsView: document.querySelector('#photoAlbumsView'),
   photoBackButton: document.querySelector('#photoBackButton'),
@@ -129,7 +134,9 @@ const elements = {
   savePetSkinButton: document.querySelector('#savePetSkinButton'),
   saveEventButton: document.querySelector('#saveEventButton'),
   scoreValue: document.querySelector('#scoreValue'),
+  toggleAlbumComposerButton: document.querySelector('#toggleAlbumComposerButton'),
   toggleEventComposerButton: document.querySelector('#toggleEventComposerButton'),
+  togglePhotoUploaderButton: document.querySelector('#togglePhotoUploaderButton'),
   uncoupleConfirmCard: document.querySelector('#uncoupleConfirmCard'),
   userEmail: document.querySelector('#userEmail')
 };
@@ -145,6 +152,7 @@ function resetSubscriptions() {
     state.unsubscribeAlbums,
     state.unsubscribeCouple,
     state.unsubscribeEvents,
+    state.unsubscribePhotoIndex,
     state.unsubscribePartnerProfile
   ];
 
@@ -158,6 +166,7 @@ function resetSubscriptions() {
   state.unsubscribeAlbums = null;
   state.unsubscribeCouple = null;
   state.unsubscribeEvents = null;
+  state.unsubscribePhotoIndex = null;
   state.unsubscribePartnerProfile = null;
 }
 
@@ -193,6 +202,29 @@ function getCurrentAlbumName() {
   return state.albums.find((album) => album.id === state.currentAlbumId)?.name || '相簿';
 }
 
+function getPhotosForAlbum(albumId) {
+  return state.allPhotos.filter((photo) => (photo.albumId ?? null) === (albumId ?? null));
+}
+
+function getAlbumCountLabel(albumId) {
+  const count = getPhotosForAlbum(albumId).length;
+  return `${count} 張照片`;
+}
+
+function getAlbumCoverUrl(albumId) {
+  return getPhotosForAlbum(albumId)[0]?.downloadURL || '';
+}
+
+function syncAlbumComposer() {
+  elements.albumForm.hidden = !state.isAlbumComposerOpen;
+  elements.toggleAlbumComposerButton.textContent = state.isAlbumComposerOpen ? '收起新增相簿' : '新增相簿';
+}
+
+function syncPhotoUploader() {
+  elements.photoForm.hidden = !state.isPhotoUploaderOpen;
+  elements.togglePhotoUploaderButton.textContent = state.isPhotoUploaderOpen ? '先不用上傳' : '上傳到這本相簿';
+}
+
 function renderAlbums() {
   clearChildren(elements.albumsList);
 
@@ -200,12 +232,18 @@ function renderAlbums() {
     {
       id: '',
       name: '未分類',
-      description: '查看還沒有分配到任何相簿的照片。'
+      description: '查看還沒有分配到任何相簿的照片。',
+      countLabel: getAlbumCountLabel(null),
+      coverUrl: getAlbumCoverUrl(null),
+      kind: 'uncategorized'
     },
     ...state.albums.map((album) => ({
       id: album.id,
       name: album.name,
-      description: '點開後可查看相簿內照片並直接上傳到這本相簿。'
+      description: '點開後可查看相簿內照片，並直接上傳到這本相簿。',
+      countLabel: getAlbumCountLabel(album.id),
+      coverUrl: getAlbumCoverUrl(album.id),
+      kind: 'album'
     }))
   ];
 
@@ -225,13 +263,49 @@ function renderAlbums() {
     button.type = 'button';
     button.className = 'album-button secondary-button';
     button.dataset.albumId = album.id;
+    button.dataset.albumKind = album.kind;
+
+    const cover = document.createElement('div');
+    cover.className = 'album-cover';
+
+    if (album.coverUrl) {
+      const coverImage = document.createElement('img');
+      coverImage.src = album.coverUrl;
+      coverImage.alt = `${album.name} 封面`;
+      coverImage.loading = 'lazy';
+      cover.appendChild(coverImage);
+    } else {
+      const coverPlaceholder = document.createElement('span');
+      coverPlaceholder.className = 'album-cover-placeholder';
+      coverPlaceholder.textContent = album.kind === 'uncategorized' ? '未分類' : '相簿';
+      cover.appendChild(coverPlaceholder);
+    }
+
+    const body = document.createElement('div');
+    body.className = 'album-body';
+
+    const topRow = document.createElement('div');
+    topRow.className = 'album-top-row';
+
     const albumName = document.createElement('strong');
     albumName.textContent = album.name;
 
+    const count = document.createElement('span');
+    count.className = 'album-count';
+    count.textContent = album.countLabel;
+
+    topRow.append(albumName, count);
+
     const albumDescription = document.createElement('span');
+    albumDescription.className = 'album-description';
     albumDescription.textContent = album.description;
 
-    button.append(albumName, albumDescription);
+    const albumAction = document.createElement('span');
+    albumAction.className = 'album-action';
+    albumAction.textContent = '打開相簿';
+
+    body.append(topRow, albumDescription, albumAction);
+    button.append(cover, body);
 
     item.appendChild(button);
     elements.albumsList.appendChild(item);
@@ -245,9 +319,12 @@ function renderPhotoPanel() {
   elements.photoAlbumsView.hidden = inAlbumView;
   elements.photoAlbumDetailView.hidden = !inAlbumView;
   elements.photoAlbumTitle.textContent = albumName;
+  elements.photoAlbumCount.textContent = getAlbumCountLabel(state.currentAlbumId);
   elements.photoAlbumHint.textContent = state.currentAlbumId === null
     ? '這裡會顯示所有還沒分進相簿的照片。'
     : '這個相簿裡的照片會同步顯示在兩人的共享空間。';
+  syncAlbumComposer();
+  syncPhotoUploader();
 }
 
 function stopAlbumPhotoSubscription() {
@@ -831,6 +908,9 @@ function syncCoupleSubscriptions(coupleId) {
   resetSubscriptions();
 
   if (!coupleId) {
+    state.allPhotos = [];
+    state.isAlbumComposerOpen = false;
+    state.isPhotoUploaderOpen = false;
     state.hasConfirmedCoupleSnapshot = false;
     state.albums = [];
     state.currentAlbumId = null;
@@ -909,6 +989,12 @@ function syncCoupleSubscriptions(coupleId) {
       state.photos = [];
     }
 
+    renderAlbums();
+    renderPhotoPanel();
+  });
+
+  state.unsubscribePhotoIndex = subscribeToPhotosByCouple(coupleId, (photos) => {
+    state.allPhotos = photos;
     renderAlbums();
     renderPhotoPanel();
   });
@@ -1116,6 +1202,8 @@ async function handlePhotoSubmit(event) {
   try {
     await uploadPhoto(file, currentCoupleId, state.currentAlbumId);
     elements.photoForm.reset();
+    state.isPhotoUploaderOpen = false;
+    syncPhotoUploader();
     setMessage(elements.photoMessage, '照片上傳成功。', 'success');
   } catch (error) {
     setMessage(elements.photoMessage, error.message, 'error');
@@ -1152,8 +1240,10 @@ async function handleAlbumCreate(event) {
   try {
     const albumId = await createAlbum(currentCoupleId, albumName);
     elements.albumForm.reset();
+    state.isAlbumComposerOpen = false;
     state.currentAlbumId = albumId;
     state.currentAlbumView = true;
+    state.isPhotoUploaderOpen = true;
     subscribeAlbumPhotosForCurrentView(currentCoupleId);
     renderPhotoPanel();
     setMessage(elements.photoMessage, '相簿建立成功。', 'success');
@@ -1175,6 +1265,7 @@ function handleAlbumsListClick(event) {
 
   state.currentAlbumId = button.dataset.albumId || null;
   state.currentAlbumView = true;
+  state.isPhotoUploaderOpen = false;
   subscribeAlbumPhotosForCurrentView(getEffectiveCoupleId());
   renderPhotoPanel();
 }
@@ -1182,6 +1273,7 @@ function handleAlbumsListClick(event) {
 function handlePhotoBack() {
   state.currentAlbumView = false;
   state.currentAlbumId = null;
+  state.isPhotoUploaderOpen = false;
   stopAlbumPhotoSubscription();
   state.photos = [];
   renderPhotoPanel();
@@ -1189,9 +1281,32 @@ function handlePhotoBack() {
   setMessage(elements.photoMessage, '', 'info');
 }
 
+function handleToggleAlbumComposer() {
+  state.isAlbumComposerOpen = !state.isAlbumComposerOpen;
+  syncAlbumComposer();
+
+  if (!state.isAlbumComposerOpen) {
+    elements.albumForm.reset();
+  } else {
+    elements.albumNameInput.focus();
+  }
+}
+
+function handleTogglePhotoUploader() {
+  state.isPhotoUploaderOpen = !state.isPhotoUploaderOpen;
+  syncPhotoUploader();
+
+  if (!state.isPhotoUploaderOpen) {
+    elements.photoForm.reset();
+  } else {
+    elements.photoFile.focus();
+  }
+}
+
 function bindEvents() {
   elements.albumForm.addEventListener('submit', handleAlbumCreate);
   elements.albumsList.addEventListener('click', handleAlbumsListClick);
+  elements.toggleAlbumComposerButton.addEventListener('click', handleToggleAlbumComposer);
   elements.createCoupleButton.addEventListener('click', handleCreateCouple);
   elements.displayNameForm.addEventListener('submit', handleDisplayNameSubmit);
   elements.joinCoupleForm.addEventListener('submit', handleJoinCouple);
@@ -1276,6 +1391,7 @@ function bindEvents() {
   });
   elements.eventsList.addEventListener('click', handleEventListClick);
   elements.photoBackButton.addEventListener('click', handlePhotoBack);
+  elements.togglePhotoUploaderButton.addEventListener('click', handleTogglePhotoUploader);
   elements.photoForm.addEventListener('submit', handlePhotoSubmit);
   elements.logoutButton.addEventListener('click', handleLogout);
 }
