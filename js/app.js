@@ -264,7 +264,7 @@ function syncEventComposerCard() {
 }
 
 function getPartnerNameText() {
-  if (!state.profile?.coupleId) {
+  if (!getEffectiveCoupleId()) {
     return '尚未加入配對';
   }
 
@@ -523,7 +523,7 @@ async function renderPetAnimation(skin) {
 function renderEvents() {
   clearChildren(elements.eventsList);
 
-  if (!state.profile?.coupleId) {
+  if (!getEffectiveCoupleId()) {
     renderEventEmptyState('請先建立或加入情侶配對，才能新增事件。');
     renderOverviewSnapshot();
     return;
@@ -593,7 +593,7 @@ function renderEvents() {
 function renderPhotos() {
   clearChildren(elements.photosList);
 
-  if (!state.profile?.coupleId) {
+  if (!getEffectiveCoupleId()) {
     renderPhotoEmptyState('請先建立或加入情侶配對，才能上傳照片。');
     return;
   }
@@ -715,7 +715,7 @@ function syncCoupleSubscriptions(coupleId) {
     if (
       !couple
       && hadCoupleBefore
-      && state.profile?.coupleId === coupleId
+      && getEffectiveCoupleId() === coupleId
       && state.user?.uid
       && !state.isRepairingCoupleId
     ) {
@@ -851,14 +851,16 @@ async function handleEventSubmit(event) {
   event.preventDefault();
   setMessage(elements.eventMessage, '', 'info');
 
-  if (!state.profile?.coupleId) {
+  const currentCoupleId = getEffectiveCoupleId();
+
+  if (!currentCoupleId) {
     setMessage(elements.eventMessage, '請先建立或加入情侶配對。', 'warning');
     return;
   }
 
   const formData = new FormData(elements.eventForm);
   const payload = {
-    coupleId: state.profile.coupleId,
+    coupleId: currentCoupleId,
     title: String(formData.get('title') || ''),
     startAt: String(formData.get('startAt') || ''),
     endAt: String(formData.get('endAt') || ''),
@@ -914,7 +916,7 @@ async function handleEventListClick(event) {
     }
 
     try {
-      await deleteEvent(eventId, state.profile?.coupleId);
+      await deleteEvent(eventId, getEffectiveCoupleId());
       setMessage(elements.eventMessage, '事件已刪除。', 'success');
 
       if (elements.eventId.value === eventId) {
@@ -930,7 +932,9 @@ async function handlePhotoSubmit(event) {
   event.preventDefault();
   setMessage(elements.photoMessage, '', 'info');
 
-  if (!state.profile?.coupleId) {
+  const currentCoupleId = getEffectiveCoupleId();
+
+  if (!currentCoupleId) {
     setMessage(elements.photoMessage, '請先建立或加入情侶配對。', 'warning');
     return;
   }
@@ -938,7 +942,7 @@ async function handlePhotoSubmit(event) {
   const file = elements.photoFile.files?.[0];
 
   try {
-    await uploadPhoto(file, state.profile.coupleId);
+    await uploadPhoto(file, currentCoupleId);
     elements.photoForm.reset();
     setMessage(elements.photoMessage, '照片上傳成功。', 'success');
   } catch (error) {
@@ -972,29 +976,35 @@ function bindEvents() {
   elements.cancelUncoupleButton.addEventListener('click', closeUncoupleConfirm);
   elements.confirmUncoupleButton.addEventListener('click', handleConfirmUncouple);
   elements.addScoreButton.addEventListener('click', async () => {
-    if (!state.profile?.coupleId) {
+    const currentCoupleId = getEffectiveCoupleId();
+
+    if (!currentCoupleId) {
       return;
     }
 
     try {
-      await addScore(state.profile.coupleId, 10);
+      await addScore(currentCoupleId, 10);
     } catch (error) {
       setMessage(elements.petMessage, error.message, 'error');
     }
   });
   elements.addExpButton.addEventListener('click', async () => {
-    if (!state.profile?.coupleId) {
+    const currentCoupleId = getEffectiveCoupleId();
+
+    if (!currentCoupleId) {
       return;
     }
 
     try {
-      await updatePetExp(state.profile.coupleId, 5);
+      await updatePetExp(currentCoupleId, 5);
     } catch (error) {
       setMessage(elements.petMessage, error.message, 'error');
     }
   });
   elements.savePetNameButton.addEventListener('click', async () => {
-    if (!state.profile?.coupleId) {
+    const currentCoupleId = getEffectiveCoupleId();
+
+    if (!currentCoupleId) {
       return;
     }
 
@@ -1005,7 +1015,7 @@ function bindEvents() {
     }
 
     try {
-      await updatePetField(state.profile.coupleId, { name });
+      await updatePetField(currentCoupleId, { name });
       elements.petNameInput.value = '';
       setMessage(elements.petMessage, '名稱已更新。', 'success');
     } catch (error) {
@@ -1013,14 +1023,16 @@ function bindEvents() {
     }
   });
   elements.savePetSkinButton.addEventListener('click', async () => {
-    if (!state.profile?.coupleId) {
+    const currentCoupleId = getEffectiveCoupleId();
+
+    if (!currentCoupleId) {
       return;
     }
 
     const skin = elements.petSkinSelect.value;
 
     try {
-      await updatePetField(state.profile.coupleId, { skin });
+      await updatePetField(currentCoupleId, { skin });
       setMessage(elements.petMessage, '外觀已更新。', 'success');
     } catch (error) {
       setMessage(elements.petMessage, error.message, 'error');
