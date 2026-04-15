@@ -5,6 +5,7 @@ import {
   ensureFirebaseConfigured,
   getDoc,
   onSnapshot,
+  runTransaction,
   serverTimestamp,
   updateDoc
 } from './firebase.js';
