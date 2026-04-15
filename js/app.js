@@ -39,6 +39,7 @@ import {
 const state = {
   couple: null,
   events: [],
+  isRepairingCoupleId: false,
   petAnimation: null,
   petAnimationPath: null,
   partnerProfile: null,
@@ -518,7 +519,7 @@ function syncCoupleSubscriptions(coupleId) {
     return;
   }
 
-  state.unsubscribeCouple = subscribeToCouple(coupleId, (couple) => {
+  state.unsubscribeCouple = subscribeToCouple(coupleId, async (couple) => {
     state.couple = couple;
     state.partnerProfile = null;
 
@@ -532,6 +533,20 @@ function syncCoupleSubscriptions(coupleId) {
         state.partnerProfile = profile;
         renderIdentityCard();
       });
+    }
+
+    if (!couple && state.profile?.coupleId === coupleId && state.user?.uid && !state.isRepairingCoupleId) {
+      state.isRepairingCoupleId = true;
+
+      try {
+        await updateDoc(doc(db, 'users', state.user.uid), {
+          coupleId: null
+        });
+      } catch (error) {
+        setMessage(elements.coupleMessage, '共享空間已解除，但清理本地配對狀態時失敗，請重新整理。', 'warning');
+      } finally {
+        state.isRepairingCoupleId = false;
+      }
     }
 
     renderCoupleState();

@@ -213,6 +213,7 @@ async function uncouple(coupleId) {
   const user = requireCurrentUser();
   await requireCurrentUserProfile(coupleId);
 
+  const userRef = doc(db, 'users', user.uid);
   const coupleRef = doc(db, 'couples', coupleId);
 
   await runTransaction(db, async (transaction) => {
@@ -229,12 +230,9 @@ async function uncouple(coupleId) {
       throw new Error('你沒有解除這組配對的權限。');
     }
 
-    memberUids.forEach((uid) => {
-      transaction.update(doc(db, 'users', uid), {
-        coupleId: null
-      });
+    transaction.update(userRef, {
+      coupleId: null
     });
-
     transaction.delete(coupleRef);
   });
 }
