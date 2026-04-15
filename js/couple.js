@@ -172,6 +172,73 @@ async function getCouple(coupleId) {
   };
 }
 
+function getPartnerUid(couple, currentUid) {
+  if (!couple || !Array.isArray(couple.memberUids)) {
+    return null;
+  }
+
+  return couple.memberUids.find((uid) => uid !== currentUid) || null;
+}
+
+function subscribeToPartnerProfile(couple, currentUid, callback) {
+  ensureFirebaseConfigured();
+
+  const partnerUid = getPartnerUid(couple, currentUid);
+
+  if (!partnerUid) {
+    callback(null);
+    return () => {};
+  }
+
+  return onSnapshot(doc(db, 'users', partnerUid), (snapshot) => {
+    if (!snapshot.exists()) {
+      callback(null);
+      return;
+    }
+
+    callback({
+      id: snapshot.id,
+      ...snapshot.data()
+    });
+  });
+}
+
+async function uncouple(coupleId) {
+  ensureFirebaseConfigured();
+
+  if (!coupleId) {
+    throw new Error('目前沒有可以解除的配對。');
+  }
+
+  const user = requireCurrentUser();
+  await requireCurrentUserProfile(coupleId);
+
+  const coupleRef = doc(db, 'couples', coupleId);
+
+  await runTransaction(db, async (transaction) => {
+    const coupleSnapshot = await transaction.get(coupleRef);
+
+    if (!coupleSnapshot.exists()) {
+      throw new Error('找不到這組配對資料。');
+    }
+
+    const couple = coupleSnapshot.data();
+    const memberUids = Array.isArray(couple.memberUids) ? couple.memberUids : [];
+
+    if (!memberUids.includes(user.uid)) {
+      throw new Error('你沒有解除這組配對的權限。');
+    }
+
+    memberUids.forEach((uid) => {
+      transaction.update(doc(db, 'users', uid), {
+        coupleId: null
+      });
+    });
+
+    transaction.delete(coupleRef);
+  });
+}
+
 function subscribeToCouple(coupleId, callback) {
   ensureFirebaseConfigured();
   return onSnapshot(doc(db, 'couples', coupleId), (snapshot) => {
@@ -190,7 +257,10 @@ function subscribeToCouple(coupleId, callback) {
 export {
   createCouple,
   getCouple,
+  getPartnerUid,
   joinCoupleByPairCode,
   normalizePairCode,
-  subscribeToCouple
+  subscribeToCouple,
+  subscribeToPartnerProfile,
+  uncouple
 };

@@ -45,23 +45,69 @@
           </div>
 
           <div class="couple-summary">
+            <div class="identity-grid">
+              <div class="identity-card">
+                <span class="mini-label">我的名字</span>
+                <strong id="myDisplayName">尚未命名</strong>
+              </div>
+              <div class="identity-card">
+                <span class="mini-label">伴侶名字</span>
+                <strong id="partnerDisplayName">伴侶尚未命名</strong>
+              </div>
+            </div>
+
+            <div id="displayNameCard" class="subcard profile-setup-card" hidden>
+              <div class="subsection-heading">
+                <h3>先幫自己取個名字</h3>
+                <p>設定後，另一半就能在首頁看到你的名字。</p>
+              </div>
+
+              <form id="displayNameForm" class="display-name-form">
+                <label class="field">
+                  <span>我的名字</span>
+                  <input
+                    id="displayNameInput"
+                    name="displayName"
+                    type="text"
+                    placeholder="輸入你想顯示的名字"
+                    maxlength="24"
+                    required
+                  />
+                </label>
+                <button type="submit">儲存名字</button>
+              </form>
+
+              <p id="displayNameMessage" class="message" hidden></p>
+            </div>
+
+            <div class="pair-code-card">
+              <div class="pair-code-head">
+                <span class="mini-label">配對碼</span>
+                <span id="coupleStatusText" class="status-pill">檢查中...</span>
+              </div>
+              <strong id="pairCodeValue" class="pair-code-text">尚未提供</strong>
+              <p class="pair-code-caption">
+                把這組代碼分享給另一半，就能加入同一個共享空間。
+              </p>
+            </div>
+
             <div class="status-chip-row">
               <div class="status-chip">
-                <span class="mini-label">目前狀態</span>
-                <strong id="coupleStatusText">檢查中...</strong>
+                <span class="mini-label">狀態</span>
+                <strong id="coupleStatusStat">尚未建立或加入配對</strong>
               </div>
               <div class="member-chip">
                 <span class="mini-label">成員數</span>
                 <strong id="memberCountValue">0</strong>
               </div>
-            </div>
-
-            <div class="pair-code-card">
-              <span class="mini-label">配對碼</span>
-              <strong id="pairCodeValue" class="pair-code-text">尚未提供</strong>
-              <p class="pair-code-caption">
-                把這組代碼分享給另一半，就能加入同一個共享空間。
-              </p>
+              <button
+                id="openUncoupleButton"
+                type="button"
+                class="danger-button ghost-danger-button"
+                hidden
+              >
+                解除配對
+              </button>
             </div>
           </div>
 
@@ -88,6 +134,22 @@
                 加入配對
               </button>
             </form>
+          </div>
+
+          <div id="uncoupleConfirmCard" class="subcard uncouple-card" hidden>
+            <div class="subsection-heading">
+              <h3>真的要解除配對嗎？</h3>
+              <p>解除後，你們的共享空間將無法再存取，這個動作不能復原。</p>
+            </div>
+
+            <div class="button-row">
+              <button id="cancelUncoupleButton" type="button" class="secondary-button">
+                先不要
+              </button>
+              <button id="confirmUncoupleButton" type="button" class="danger-button">
+                確認解除配對
+              </button>
+            </div>
           </div>
 
           <p id="coupleMessage" class="message" hidden></p>

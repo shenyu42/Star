@@ -1,6 +1,9 @@
 import {
+  db,
+  doc,
   getMissingFirebaseConfigFields,
-  isFirebaseConfigured
+  isFirebaseConfigured,
+  updateDoc
 } from './firebase.js';
 import {
   ensureUserProfile,
@@ -8,7 +11,13 @@ import {
   observeAuthState,
   subscribeToUserProfile
 } from './auth.js';
-import { createCouple, joinCoupleByPairCode, subscribeToCouple } from './couple.js';
+import {
+  createCouple,
+  joinCoupleByPairCode,
+  subscribeToCouple,
+  subscribeToPartnerProfile,
+  uncouple
+} from './couple.js';
 import {
   createEvent,
   deleteEvent,
@@ -32,11 +41,13 @@ const state = {
   events: [],
   petAnimation: null,
   petAnimationPath: null,
+  partnerProfile: null,
   photos: [],
   profile: null,
   user: null,
   unsubscribeCouple: null,
   unsubscribeEvents: null,
+  unsubscribePartnerProfile: null,
   unsubscribePhotos: null,
   unsubscribeProfile: null
 };
@@ -46,10 +57,17 @@ const elements = {
   addScoreButton: document.querySelector('#addScoreButton'),
   appFirebaseNotice: document.querySelector('#appFirebaseNotice'),
   appStatus: document.querySelector('#appStatus'),
+  cancelUncoupleButton: document.querySelector('#cancelUncoupleButton'),
   cancelEditButton: document.querySelector('#cancelEditButton'),
   coupleMessage: document.querySelector('#coupleMessage'),
+  coupleStatusStat: document.querySelector('#coupleStatusStat'),
   coupleStatusText: document.querySelector('#coupleStatusText'),
   createCoupleButton: document.querySelector('#createCoupleButton'),
+  confirmUncoupleButton: document.querySelector('#confirmUncoupleButton'),
+  displayNameCard: document.querySelector('#displayNameCard'),
+  displayNameForm: document.querySelector('#displayNameForm'),
+  displayNameInput: document.querySelector('#displayNameInput'),
+  displayNameMessage: document.querySelector('#displayNameMessage'),
   eventForm: document.querySelector('#eventForm'),
   eventId: document.querySelector('#eventId'),
   eventMessage: document.querySelector('#eventMessage'),
@@ -57,8 +75,11 @@ const elements = {
   joinCoupleForm: document.querySelector('#joinCoupleForm'),
   logoutButton: document.querySelector('#logoutButton'),
   memberCountValue: document.querySelector('#memberCountValue'),
+  myDisplayName: document.querySelector('#myDisplayName'),
+  openUncoupleButton: document.querySelector('#openUncoupleButton'),
   pairActions: document.querySelector('#pairActions'),
   pairCodeValue: document.querySelector('#pairCodeValue'),
+  partnerDisplayName: document.querySelector('#partnerDisplayName'),
   petAnimation: document.querySelector('#petAnimation'),
   petExp: document.querySelector('#petExp'),
   petExpBar: document.querySelector('#petExpBar'),
@@ -77,6 +98,7 @@ const elements = {
   savePetSkinButton: document.querySelector('#savePetSkinButton'),
   saveEventButton: document.querySelector('#saveEventButton'),
   scoreValue: document.querySelector('#scoreValue'),
+  uncoupleConfirmCard: document.querySelector('#uncoupleConfirmCard'),
   userEmail: document.querySelector('#userEmail')
 };
 
@@ -88,6 +110,7 @@ function resetSubscriptions() {
   const unsubscribers = [
     state.unsubscribeCouple,
     state.unsubscribeEvents,
+    state.unsubscribePartnerProfile,
     state.unsubscribePhotos
   ];
 
@@ -99,6 +122,7 @@ function resetSubscriptions() {
 
   state.unsubscribeCouple = null;
   state.unsubscribeEvents = null;
+  state.unsubscribePartnerProfile = null;
   state.unsubscribePhotos = null;
 }
 
@@ -160,6 +184,46 @@ function renderPet() {
   elements.petSkin.textContent = pet.skin || '—';
   elements.petExpBar.style.width = `${progress}%`;
   renderPetAnimation(pet.skin || 'default');
+}
+
+function getDisplayNameText(profile) {
+  return profile?.displayName?.trim() || '尚未命名';
+}
+
+function getPartnerNameText() {
+  if (!state.profile?.coupleId) {
+    return '尚未加入配對';
+  }
+
+  if (!state.couple?.memberUids?.some((uid) => uid !== state.user?.uid)) {
+    return '等待伴侶加入';
+  }
+
+  return state.partnerProfile?.displayName?.trim() || '伴侶尚未命名';
+}
+
+function renderIdentityCard() {
+  elements.myDisplayName.textContent = getDisplayNameText(state.profile);
+  elements.partnerDisplayName.textContent = getPartnerNameText();
+
+  const needsDisplayName = !state.profile?.displayName?.trim();
+  elements.displayNameCard.hidden = !needsDisplayName;
+
+  if (needsDisplayName && elements.displayNameInput && !elements.displayNameInput.value) {
+    elements.displayNameInput.value = '';
+  }
+}
+
+function closeUncoupleConfirm() {
+  elements.uncoupleConfirmCard.hidden = true;
+}
+
+function openUncoupleConfirm() {
+  if (!state.profile?.coupleId) {
+    return;
+  }
+
+  elements.uncoupleConfirmCard.hidden = false;
 }
 
 function getPetAnimationCandidates(skin) {
@@ -412,23 +476,31 @@ function renderCoupleState() {
   const coupleId = state.profile?.coupleId || '';
   const memberCount = state.couple?.memberUids?.length || 0;
   const configured = isFirebaseConfigured();
+  const coupled = Boolean(coupleId);
 
-  if (!coupleId) {
-    elements.coupleStatusText.textContent = '尚未建立或加入配對';
+  if (!coupled) {
+    elements.coupleStatusText.textContent = '未配對';
+    elements.coupleStatusStat.textContent = '尚未建立或加入配對';
     elements.pairCodeValue.textContent = '請先建立配對';
     elements.memberCountValue.textContent = '0';
     elements.pairActions.hidden = false;
+    elements.openUncoupleButton.hidden = true;
+    closeUncoupleConfirm();
     setFormDisabled(elements.eventForm, true);
     setFormDisabled(elements.photoForm, true);
+    renderIdentityCard();
     return;
   }
 
-  elements.coupleStatusText.textContent = state.couple ? '已連結' : '已綁定配對，正在載入資料...';
+  elements.coupleStatusText.textContent = state.couple ? '已連結' : '同步中';
+  elements.coupleStatusStat.textContent = state.couple ? '已建立共享空間' : '已綁定配對，正在載入資料...';
   elements.pairCodeValue.textContent = coupleId;
   elements.memberCountValue.textContent = String(memberCount);
   elements.pairActions.hidden = true;
+  elements.openUncoupleButton.hidden = false;
   setFormDisabled(elements.eventForm, !configured);
   setFormDisabled(elements.photoForm, !configured);
+  renderIdentityCard();
 }
 
 function syncCoupleSubscriptions(coupleId) {
@@ -437,6 +509,7 @@ function syncCoupleSubscriptions(coupleId) {
   if (!coupleId) {
     state.couple = null;
     state.events = [];
+    state.partnerProfile = null;
     state.photos = [];
     renderCoupleState();
     renderPet();
@@ -447,6 +520,20 @@ function syncCoupleSubscriptions(coupleId) {
 
   state.unsubscribeCouple = subscribeToCouple(coupleId, (couple) => {
     state.couple = couple;
+    state.partnerProfile = null;
+
+    if (typeof state.unsubscribePartnerProfile === 'function') {
+      state.unsubscribePartnerProfile();
+      state.unsubscribePartnerProfile = null;
+    }
+
+    if (couple && state.user?.uid) {
+      state.unsubscribePartnerProfile = subscribeToPartnerProfile(couple, state.user.uid, (profile) => {
+        state.partnerProfile = profile;
+        renderIdentityCard();
+      });
+    }
+
     renderCoupleState();
     renderPet();
   });
@@ -488,6 +575,34 @@ function disableAppIfNeeded() {
   setFormDisabled(elements.joinCoupleForm, !configured);
 }
 
+async function handleDisplayNameSubmit(event) {
+  event.preventDefault();
+  setMessage(elements.displayNameMessage, '', 'info');
+
+  const displayName = elements.displayNameInput.value.trim();
+
+  if (!displayName) {
+    setMessage(elements.displayNameMessage, '請先輸入你的名字。', 'warning');
+    return;
+  }
+
+  if (!state.user?.uid) {
+    setMessage(elements.displayNameMessage, '請先登入。', 'error');
+    return;
+  }
+
+  try {
+    await updateDoc(doc(db, 'users', state.user.uid), {
+      displayName
+    });
+    elements.displayNameForm.reset();
+    setMessage(elements.coupleMessage, `我的名字：${displayName}`, 'success');
+    setMessage(elements.displayNameMessage, '', 'info');
+  } catch (error) {
+    setMessage(elements.displayNameMessage, error.message, 'error');
+  }
+}
+
 async function handleCreateCouple() {
   setMessage(elements.coupleMessage, '', 'info');
 
@@ -509,6 +624,22 @@ async function handleJoinCouple(event) {
     const pairCode = await joinCoupleByPairCode(formData.get('pairCode'));
     elements.joinCoupleForm.reset();
     setMessage(elements.coupleMessage, `成功加入配對：${pairCode}`, 'success');
+  } catch (error) {
+    setMessage(elements.coupleMessage, error.message, 'error');
+  }
+}
+
+async function handleConfirmUncouple() {
+  if (!state.profile?.coupleId) {
+    return;
+  }
+
+  setMessage(elements.coupleMessage, '', 'info');
+
+  try {
+    await uncouple(state.profile.coupleId);
+    closeUncoupleConfirm();
+    setMessage(elements.coupleMessage, '已解除配對，之後可以重新建立新的共享空間。', 'success');
   } catch (error) {
     setMessage(elements.coupleMessage, error.message, 'error');
   }
@@ -624,8 +755,12 @@ async function handleLogout() {
 
 function bindEvents() {
   elements.createCoupleButton.addEventListener('click', handleCreateCouple);
+  elements.displayNameForm.addEventListener('submit', handleDisplayNameSubmit);
   elements.joinCoupleForm.addEventListener('submit', handleJoinCouple);
   elements.eventForm.addEventListener('submit', handleEventSubmit);
+  elements.openUncoupleButton.addEventListener('click', openUncoupleConfirm);
+  elements.cancelUncoupleButton.addEventListener('click', closeUncoupleConfirm);
+  elements.confirmUncoupleButton.addEventListener('click', handleConfirmUncouple);
   elements.addScoreButton.addEventListener('click', async () => {
     if (!state.profile?.coupleId) {
       return;
@@ -714,6 +849,7 @@ function startAuthGuard() {
     state.unsubscribeProfile = subscribeToUserProfile(user.uid, (profile) => {
       state.profile = profile;
       syncCoupleSubscriptions(profile?.coupleId || null);
+      renderIdentityCard();
       renderCoupleState();
     });
   });
@@ -721,6 +857,7 @@ function startAuthGuard() {
 
 disableAppIfNeeded();
 resetEventForm();
+renderIdentityCard();
 renderCoupleState();
 renderEvents();
 renderPhotos();

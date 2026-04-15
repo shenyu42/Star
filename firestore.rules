@@ -1,131 +1,28 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
     function isSignedIn() {
       return request.auth != null;
     }
 
-    function userPath(uid) {
-      return /databases/$(database)/documents/users/$(uid);
-    }
-
-    function couplePath(coupleId) {
-      return /databases/$(database)/documents/couples/$(coupleId);
-    }
-
-    function userExists(uid) {
-      return exists(userPath(uid));
-    }
-
-    function currentUserExists() {
-      return isSignedIn() && userExists(request.auth.uid);
-    }
-
-    function currentUserCoupleId() {
-      return get(userPath(request.auth.uid)).data.coupleId;
-    }
-
-    function isCoupleMember(coupleId) {
-      return isSignedIn()
-        && exists(couplePath(coupleId))
-        && request.auth.uid in get(couplePath(coupleId)).data.memberUids;
-    }
-
-    function isOwnCoupleMember(coupleId) {
-      return currentUserExists()
-        && currentUserCoupleId() == coupleId
-        && isCoupleMember(coupleId);
-    }
-
     match /users/{uid} {
-      allow create: if isSignedIn()
-        && request.auth.uid == uid
-        && request.resource.data.uid == uid
-        && request.resource.data.coupleId == null;
-
-      allow read: if isSignedIn() && request.auth.uid == uid;
-
-      allow update: if isSignedIn()
-        && request.auth.uid == uid
-        && request.resource.data.uid == resource.data.uid
-        && request.resource.data.createdAt == resource.data.createdAt
-        && (
-          request.resource.data.coupleId == resource.data.coupleId
-          || (
-            resource.data.coupleId == null
-            && request.resource.data.coupleId is string
-          )
-        );
-
-      allow delete: if false;
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && request.auth.uid == uid;
     }
 
     match /couples/{coupleId} {
-      allow get: if isSignedIn();
-      allow list: if false;
-
-      allow create: if isSignedIn()
-        && request.resource.data.id == coupleId
-        && request.resource.data.pairCode == coupleId
-        && request.resource.data.memberUids.size() == 1
-        && request.resource.data.memberUids[0] == request.auth.uid;
-
-      allow update: if isSignedIn()
-        && request.resource.data.id == resource.data.id
-        && request.resource.data.pairCode == resource.data.pairCode
-        && request.resource.data.createdAt == resource.data.createdAt
-        && (
-          (
-            resource.data.id == coupleId
-            && resource.data.memberUids.size() == 1
-            && request.resource.data.memberUids.size() == 2
-            && request.resource.data.memberUids[0] == resource.data.memberUids[0]
-            && request.resource.data.memberUids[1] == request.auth.uid
-          )
-          || (
-            isCoupleMember(coupleId)
-            && request.resource.data.memberUids == resource.data.memberUids
-          )
-        );
-
-      allow delete: if false;
-    }
-
-    match /events/{eventId} {
-      allow create: if isSignedIn()
-        && isOwnCoupleMember(request.resource.data.coupleId)
-        && request.resource.data.createdBy == request.auth.uid;
-
-      allow read: if isSignedIn()
-        && isOwnCoupleMember(resource.data.coupleId);
-
-      allow update: if isSignedIn()
-        && isOwnCoupleMember(resource.data.coupleId)
-        && request.resource.data.coupleId == resource.data.coupleId
-        && request.resource.data.createdBy == resource.data.createdBy
-        && request.resource.data.createdAt == resource.data.createdAt;
-
-      allow delete: if isSignedIn()
-        && isOwnCoupleMember(resource.data.coupleId);
+      allow read: if isSignedIn() && resource.data.memberUids.hasAny([request.auth.uid]);
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && resource.data.memberUids.hasAny([request.auth.uid]);
+      allow delete: if isSignedIn() && resource.data.memberUids.hasAny([request.auth.uid]);
     }
 
     match /photos/{photoId} {
-      allow create: if isSignedIn()
-        && isOwnCoupleMember(request.resource.data.coupleId)
-        && request.resource.data.uploadedBy == request.auth.uid;
+      allow read, write: if isSignedIn();
+    }
 
-      allow read: if isSignedIn()
-        && isOwnCoupleMember(resource.data.coupleId);
-
-      allow update: if isSignedIn()
-        && isOwnCoupleMember(resource.data.coupleId)
-        && request.resource.data.coupleId == resource.data.coupleId
-        && request.resource.data.uploadedBy == resource.data.uploadedBy
-        && request.resource.data.createdAt == resource.data.createdAt;
-
-      allow delete: if isSignedIn()
-        && isOwnCoupleMember(resource.data.coupleId);
+    match /events/{eventId} {
+      allow read, write: if isSignedIn();
     }
   }
 }

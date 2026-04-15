@@ -31,13 +31,12 @@ async function ensureUserProfile(user) {
   const userRef = doc(db, 'users', user.uid);
   const snapshot = await getDoc(userRef);
   const nextEmail = user.email || '';
-  const nextDisplayName = user.displayName || '';
 
   if (!snapshot.exists()) {
     await setDoc(userRef, {
       uid: user.uid,
       email: nextEmail,
-      displayName: nextDisplayName,
+      displayName: '',
       coupleId: null,
       createdAt: serverTimestamp()
     });
@@ -45,7 +44,7 @@ async function ensureUserProfile(user) {
     return {
       uid: user.uid,
       email: nextEmail,
-      displayName: nextDisplayName,
+      displayName: '',
       coupleId: null
     };
   }
@@ -61,8 +60,8 @@ async function ensureUserProfile(user) {
     updates.email = nextEmail;
   }
 
-  if (data.displayName !== nextDisplayName) {
-    updates.displayName = nextDisplayName;
+  if (!Object.prototype.hasOwnProperty.call(data, 'displayName')) {
+    updates.displayName = '';
   }
 
   if (!Object.prototype.hasOwnProperty.call(data, 'coupleId')) {
