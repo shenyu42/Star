@@ -542,6 +542,7 @@ function syncCoupleSubscriptions(coupleId) {
   }
 
   state.unsubscribeCouple = subscribeToCouple(coupleId, async (couple) => {
+    const hadCoupleBefore = Boolean(state.couple);
     state.couple = couple;
     state.partnerProfile = null;
 
@@ -557,7 +558,13 @@ function syncCoupleSubscriptions(coupleId) {
       });
     }
 
-    if (!couple && state.profile?.coupleId === coupleId && state.user?.uid && !state.isRepairingCoupleId) {
+    if (
+      !couple
+      && hadCoupleBefore
+      && state.profile?.coupleId === coupleId
+      && state.user?.uid
+      && !state.isRepairingCoupleId
+    ) {
       state.isRepairingCoupleId = true;
 
       try {
