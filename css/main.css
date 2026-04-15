@@ -369,6 +369,10 @@ h3 {
   background: var(--surface-soft);
 }
 
+.mobile-only {
+  display: none;
+}
+
 .muted-text {
   color: var(--muted);
 }
@@ -422,6 +426,138 @@ h3 {
   display: grid;
   gap: 10px;
   margin-bottom: 18px;
+}
+
+.mobile-summary-card {
+  margin-bottom: 14px;
+  padding: 14px 15px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow-soft);
+}
+
+.mobile-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.mobile-summary-chip {
+  display: grid;
+  gap: 0.28rem;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fffdfb;
+}
+
+.mobile-summary-chip span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.mobile-summary-chip strong {
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.mobile-tabs {
+  position: sticky;
+  top: 10px;
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow-soft);
+}
+
+.mobile-tab-button {
+  flex: 1 1 0;
+  padding: 0.7rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: transparent;
+  box-shadow: none;
+}
+
+.mobile-tab-button.is-active {
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--brand), var(--brand-strong));
+  box-shadow: 0 8px 18px rgba(214, 95, 59, 0.18);
+}
+
+.mobile-overview-block {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.mobile-overview-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.overview-mini-card {
+  display: grid;
+  gap: 0.25rem;
+  padding: 12px 13px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fffdfb;
+}
+
+.overview-mini-card strong {
+  font-size: 1rem;
+}
+
+.overview-mini-card small {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.overview-event-preview {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fffdfb;
+}
+
+.overview-events-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.overview-event-item {
+  display: grid;
+  gap: 0.25rem;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.overview-event-item:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.overview-event-item strong {
+  font-size: 0.93rem;
+}
+
+.overview-event-item span {
+  font-size: 0.8rem;
+  color: var(--muted);
 }
 
 .app-grid {
@@ -573,6 +709,15 @@ h3 {
 .event-layout {
   display: grid;
   gap: 16px;
+}
+
+.mobile-event-toolbar {
+  margin-bottom: 12px;
+}
+
+.compact-action-button {
+  width: 100%;
+  padding: 0.72rem 0.9rem;
 }
 
 .event-composer-card,
@@ -983,13 +1128,14 @@ h3 {
   .page-shell,
   .app-shell {
     width: min(100% - 24px, 1240px);
-    padding-top: 18px;
-    padding-bottom: 34px;
+    padding-top: 14px;
+    padding-bottom: 28px;
   }
 
   .hero,
   .panel {
-    padding: 18px;
+    padding: 16px;
+    border-radius: 20px;
   }
 
   .two-column-grid,
@@ -999,6 +1145,49 @@ h3 {
     grid-template-columns: 1fr;
   }
 
+  .mobile-only {
+    display: block;
+  }
+
+  .mobile-tabs.mobile-only {
+    display: flex;
+  }
+
+  .mobile-overview-block.mobile-only {
+    display: grid;
+  }
+
+  .app-header {
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+  }
+
+  .app-subtitle {
+    display: none;
+  }
+
+  .page-title {
+    font-size: 1.65rem;
+    margin-bottom: 0;
+  }
+
+  .eyebrow {
+    margin-bottom: 0.3rem;
+    font-size: 0.72rem;
+  }
+
+  .status-strip {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .message {
+    padding: 0.72rem 0.82rem;
+    font-size: 0.87rem;
+    border-radius: 12px;
+  }
+
   .button-row,
   .topbar-actions,
   .item-title-row {
@@ -1006,8 +1195,106 @@ h3 {
     align-items: stretch;
   }
 
+  .topbar-actions {
+    gap: 8px;
+  }
+
+  .user-card {
+    padding: 0.72rem 0.82rem;
+  }
+
+  .app-grid {
+    gap: 0;
+  }
+
+  .mobile-tab-panel[hidden] {
+    display: none !important;
+  }
+
+  .couple-panel,
+  #eventPanel,
+  #photoPanel,
+  #petPanel {
+    border-radius: 22px;
+  }
+
+  .couple-summary {
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .identity-card,
+  .status-chip,
+  .member-chip,
+  .pet-mini-card,
+  .pair-code-card,
+  .subcard {
+    box-shadow: none;
+  }
+
+  .pair-code-card {
+    padding: 14px;
+  }
+
+  .pair-code-text {
+    font-size: 1.35rem;
+    letter-spacing: 0.12em;
+    word-break: break-all;
+  }
+
+  .pair-code-caption {
+    font-size: 0.82rem;
+  }
+
+  .ghost-danger-button {
+    margin-left: 0;
+  }
+
+  .event-layout {
+    gap: 12px;
+  }
+
+  .event-feed-card {
+    order: 1;
+  }
+
+  .event-composer-card {
+    order: 2;
+  }
+
+  .event-composer-card[data-mobile-collapsed="true"] {
+    display: none;
+  }
+
+  .event-list {
+    gap: 10px;
+  }
+
+  .item-card {
+    padding: 13px 13px 13px 16px;
+    gap: 8px;
+    border-radius: 16px;
+  }
+
+  .event-card {
+    padding-left: 24px;
+  }
+
+  .event-card::before {
+    left: 11px;
+    top: 18px;
+    width: 7px;
+    height: 7px;
+  }
+
   .item-actions {
     justify-content: flex-start;
+    gap: 6px;
+  }
+
+  .item-actions button {
+    padding: 0.38rem 0.62rem;
+    font-size: 0.78rem;
   }
 
   .pet-name-row,
@@ -1023,7 +1310,65 @@ h3 {
     width: 100%;
   }
 
+  .photo-upload-card {
+    margin-bottom: 12px;
+  }
+
+  .upload-box {
+    gap: 10px;
+  }
+
+  .photo-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .photo-card {
+    gap: 8px;
+    padding: 10px;
+    border-radius: 16px;
+  }
+
+  .photo-frame {
+    border-radius: 12px;
+  }
+
+  .photo-body strong {
+    font-size: 0.82rem;
+  }
+
+  .photo-meta {
+    font-size: 0.74rem;
+    line-height: 1.4;
+  }
+
+  .photo-link {
+    padding: 0.34rem 0.56rem;
+    font-size: 0.76rem;
+  }
+
+  .pet-hero {
+    gap: 14px;
+  }
+
   .pet-animation-shell {
-    min-height: 220px;
+    min-height: 240px;
+  }
+
+  .pet-animation {
+    width: min(100%, 280px);
+    height: min(100%, 280px);
+  }
+
+  .score-display {
+    font-size: 3.2rem;
+  }
+
+  .pet-actions-grid {
+    gap: 10px;
+  }
+
+  .pet-button-row button {
+    min-height: 46px;
   }
 }

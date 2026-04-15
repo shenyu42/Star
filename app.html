@@ -37,12 +37,78 @@
         <p id="appFirebaseNotice" class="message" hidden></p>
       </section>
 
+      <section class="mobile-summary-card mobile-only" aria-label="手機摘要">
+        <div class="mobile-summary-grid">
+          <div class="mobile-summary-chip">
+            <span>情侶狀態</span>
+            <strong id="mobileSummaryStatus">未配對</strong>
+          </div>
+          <div class="mobile-summary-chip">
+            <span>配對碼</span>
+            <strong id="mobileSummaryPairCode">未建立</strong>
+          </div>
+          <div class="mobile-summary-chip">
+            <span>成員數</span>
+            <strong id="mobileSummaryMemberCount">0</strong>
+          </div>
+          <div class="mobile-summary-chip">
+            <span>分數</span>
+            <strong id="mobileSummaryScore">0</strong>
+          </div>
+          <div class="mobile-summary-chip">
+            <span>寵物名稱</span>
+            <strong id="mobileSummaryPetName">—</strong>
+          </div>
+          <div class="mobile-summary-chip">
+            <span>寵物等級</span>
+            <strong id="mobileSummaryPetLevel">Lv. —</strong>
+          </div>
+        </div>
+      </section>
+
+      <nav class="mobile-tabs mobile-only" aria-label="手機主分頁">
+        <button type="button" class="mobile-tab-button is-active" data-mobile-tab-button="overview">
+          總覽
+        </button>
+        <button type="button" class="mobile-tab-button" data-mobile-tab-button="events">
+          事件
+        </button>
+        <button type="button" class="mobile-tab-button" data-mobile-tab-button="photos">
+          照片
+        </button>
+        <button type="button" class="mobile-tab-button" data-mobile-tab-button="pet">
+          寵物
+        </button>
+      </nav>
+
       <section class="app-grid">
-        <section class="panel couple-panel">
+        <section class="panel couple-panel mobile-tab-panel" data-mobile-tab-panel="overview">
           <div class="section-heading">
             <h2>情侶狀態</h2>
             <p>建立或加入配對後，你們就會共享同一份事件、照片與寵物進度。</p>
           </div>
+
+          <section class="mobile-overview-block mobile-only" aria-label="總覽摘要">
+            <div class="mobile-overview-metrics">
+              <div class="overview-mini-card">
+                <span class="mini-label">共享分數</span>
+                <strong id="mobileOverviewScore">0</strong>
+              </div>
+              <div class="overview-mini-card">
+                <span class="mini-label">寵物摘要</span>
+                <strong id="mobileOverviewPetName">—</strong>
+                <small id="mobileOverviewPetMeta">Lv. —</small>
+              </div>
+            </div>
+
+            <div class="overview-event-preview">
+              <div class="subsection-heading">
+                <h3>最近事件</h3>
+                <p>先看最近 1 到 2 筆共同安排。</p>
+              </div>
+              <ul id="overviewEventsList" class="overview-events-list"></ul>
+            </div>
+          </section>
 
           <div class="couple-summary">
             <div class="identity-grid">
@@ -155,14 +221,24 @@
           <p id="coupleMessage" class="message" hidden></p>
         </section>
 
-        <section id="eventPanel" class="panel">
+        <section id="eventPanel" class="panel mobile-tab-panel" data-mobile-tab-panel="events">
           <div class="section-heading">
             <h2>共享事件</h2>
             <p>把約會、紀念日、一起要做的事都收進同一條時間線。</p>
           </div>
 
+          <div class="mobile-event-toolbar mobile-only">
+            <button
+              id="toggleEventComposerButton"
+              type="button"
+              class="secondary-button compact-action-button"
+            >
+              新增事件
+            </button>
+          </div>
+
           <div class="event-layout">
-            <div class="subcard event-composer-card">
+            <div id="eventComposerCard" class="subcard event-composer-card">
               <div class="subsection-heading">
                 <h3>新增或編輯事件</h3>
                 <p>先把下一個共同計畫寫下來。</p>
@@ -236,7 +312,7 @@
           </div>
         </section>
 
-        <section id="photoPanel" class="panel">
+        <section id="photoPanel" class="panel mobile-tab-panel" data-mobile-tab-panel="photos">
           <div class="section-heading">
             <h2>照片相簿</h2>
             <p>把一起的瞬間存進雲端，之後可以慢慢累積成你們的共享相簿。</p>
@@ -266,7 +342,7 @@
           <ul id="photosList" class="photo-list photo-gallery"></ul>
         </section>
 
-        <section id="petPanel" class="panel">
+        <section id="petPanel" class="panel mobile-tab-panel" data-mobile-tab-panel="pet">
           <div class="section-heading">
             <h2>分數與寵物</h2>
             <p>把共同累積的分數和寵物成長變成這個首頁最有記憶點的角落。</p>

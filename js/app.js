@@ -37,8 +37,10 @@ import {
 } from './ui.js';
 
 const state = {
+  activeMobileTab: 'overview',
   couple: null,
   events: [],
+  isEventComposerOpen: false,
   isRepairingCoupleId: false,
   pendingCoupleId: '',
   petAnimation: null,
@@ -70,6 +72,7 @@ const elements = {
   displayNameForm: document.querySelector('#displayNameForm'),
   displayNameInput: document.querySelector('#displayNameInput'),
   displayNameMessage: document.querySelector('#displayNameMessage'),
+  eventComposerCard: document.querySelector('#eventComposerCard'),
   eventForm: document.querySelector('#eventForm'),
   eventId: document.querySelector('#eventId'),
   eventMessage: document.querySelector('#eventMessage'),
@@ -77,8 +80,20 @@ const elements = {
   joinCoupleForm: document.querySelector('#joinCoupleForm'),
   logoutButton: document.querySelector('#logoutButton'),
   memberCountValue: document.querySelector('#memberCountValue'),
+  mobileOverviewPetMeta: document.querySelector('#mobileOverviewPetMeta'),
+  mobileOverviewPetName: document.querySelector('#mobileOverviewPetName'),
+  mobileOverviewScore: document.querySelector('#mobileOverviewScore'),
+  mobileSummaryMemberCount: document.querySelector('#mobileSummaryMemberCount'),
+  mobileSummaryPairCode: document.querySelector('#mobileSummaryPairCode'),
+  mobileSummaryPetLevel: document.querySelector('#mobileSummaryPetLevel'),
+  mobileSummaryPetName: document.querySelector('#mobileSummaryPetName'),
+  mobileSummaryScore: document.querySelector('#mobileSummaryScore'),
+  mobileSummaryStatus: document.querySelector('#mobileSummaryStatus'),
+  mobileTabButtons: Array.from(document.querySelectorAll('[data-mobile-tab-button]')),
+  mobileTabPanels: Array.from(document.querySelectorAll('[data-mobile-tab-panel]')),
   myDisplayName: document.querySelector('#myDisplayName'),
   openUncoupleButton: document.querySelector('#openUncoupleButton'),
+  overviewEventsList: document.querySelector('#overviewEventsList'),
   pairActions: document.querySelector('#pairActions'),
   pairCodeValue: document.querySelector('#pairCodeValue'),
   partnerDisplayName: document.querySelector('#partnerDisplayName'),
@@ -100,12 +115,14 @@ const elements = {
   savePetSkinButton: document.querySelector('#savePetSkinButton'),
   saveEventButton: document.querySelector('#saveEventButton'),
   scoreValue: document.querySelector('#scoreValue'),
+  toggleEventComposerButton: document.querySelector('#toggleEventComposerButton'),
   uncoupleConfirmCard: document.querySelector('#uncoupleConfirmCard'),
   userEmail: document.querySelector('#userEmail')
 };
 
 const PET_EXP_PER_LEVEL = 20;
 const LOTTIE_CDN_URL = 'https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js';
+const MOBILE_MEDIA_QUERY = window.matchMedia('(max-width: 760px)');
 let lottieLoaderPromise = null;
 
 function resetSubscriptions() {
@@ -133,6 +150,7 @@ function resetEventForm() {
   elements.eventId.value = '';
   elements.saveEventButton.textContent = '儲存事件';
   elements.cancelEditButton.hidden = true;
+  setEventComposerOpen(false);
 }
 
 function renderEventEmptyState(message) {
@@ -171,6 +189,8 @@ function renderPet() {
     elements.petSkin.textContent = '—';
     elements.petExpBar.style.width = '0%';
     renderPetAnimation('default');
+    renderMobileSummary();
+    renderOverviewSnapshot();
     return;
   }
 
@@ -186,6 +206,8 @@ function renderPet() {
   elements.petSkin.textContent = pet.skin || '—';
   elements.petExpBar.style.width = `${progress}%`;
   renderPetAnimation(pet.skin || 'default');
+  renderMobileSummary();
+  renderOverviewSnapshot();
 }
 
 function getDisplayNameText(profile) {
@@ -194,6 +216,51 @@ function getDisplayNameText(profile) {
 
 function getEffectiveCoupleId() {
   return state.profile?.coupleId || state.pendingCoupleId || '';
+}
+
+function isMobileViewport() {
+  return MOBILE_MEDIA_QUERY.matches;
+}
+
+function setActiveMobileTab(tab) {
+  state.activeMobileTab = tab;
+  syncMobilePanels();
+}
+
+function syncMobilePanels() {
+  const mobile = isMobileViewport();
+
+  elements.mobileTabButtons.forEach((button) => {
+    const isActive = button.dataset.mobileTabButton === state.activeMobileTab;
+    button.classList.toggle('is-active', isActive);
+    button.setAttribute('aria-pressed', String(isActive));
+  });
+
+  elements.mobileTabPanels.forEach((panel) => {
+    if (!mobile) {
+      panel.hidden = false;
+      return;
+    }
+
+    panel.hidden = panel.dataset.mobileTabPanel !== state.activeMobileTab;
+  });
+
+  syncEventComposerCard();
+}
+
+function setEventComposerOpen(open) {
+  state.isEventComposerOpen = open;
+  syncEventComposerCard();
+}
+
+function syncEventComposerCard() {
+  if (!elements.eventComposerCard || !elements.toggleEventComposerButton) {
+    return;
+  }
+
+  const shouldCollapse = isMobileViewport() && !state.isEventComposerOpen;
+  elements.eventComposerCard.dataset.mobileCollapsed = shouldCollapse ? 'true' : 'false';
+  elements.toggleEventComposerButton.textContent = state.isEventComposerOpen ? '收合表單' : '新增事件';
 }
 
 function getPartnerNameText() {
@@ -218,6 +285,55 @@ function renderIdentityCard() {
   if (needsDisplayName && elements.displayNameInput && !elements.displayNameInput.value) {
     elements.displayNameInput.value = '';
   }
+}
+
+function renderMobileSummary() {
+  const coupleId = getEffectiveCoupleId();
+  const pet = state.couple?.pet || {};
+
+  elements.mobileSummaryStatus.textContent = coupleId ? '已配對' : '未配對';
+  elements.mobileSummaryPairCode.textContent = coupleId || '未建立';
+  elements.mobileSummaryMemberCount.textContent = String(state.couple?.memberUids?.length || 0);
+  elements.mobileSummaryScore.textContent = String(state.couple?.score ?? 0);
+  elements.mobileSummaryPetName.textContent = pet.name || '—';
+  elements.mobileSummaryPetLevel.textContent = `Lv. ${pet.level ?? '—'}`;
+}
+
+function renderOverviewEvents() {
+  clearChildren(elements.overviewEventsList);
+
+  const recentEvents = state.events.slice(0, 2);
+
+  if (!recentEvents.length) {
+    const item = document.createElement('li');
+    item.className = 'overview-event-item muted-text';
+    item.textContent = '還沒有共同事件，先安排下一次約會吧。';
+    elements.overviewEventsList.appendChild(item);
+    return;
+  }
+
+  recentEvents.forEach((eventItem) => {
+    const item = document.createElement('li');
+    item.className = 'overview-event-item';
+
+    const title = document.createElement('strong');
+    title.textContent = eventItem.title;
+
+    const time = document.createElement('span');
+    time.textContent = formatDateTime(eventItem.startAt, eventItem.allDay);
+
+    item.append(title, time);
+    elements.overviewEventsList.appendChild(item);
+  });
+}
+
+function renderOverviewSnapshot() {
+  const pet = state.couple?.pet || {};
+
+  elements.mobileOverviewScore.textContent = String(state.couple?.score ?? 0);
+  elements.mobileOverviewPetName.textContent = pet.name || '—';
+  elements.mobileOverviewPetMeta.textContent = `Lv. ${pet.level ?? '—'}${pet.skin ? ` · ${pet.skin}` : ''}`;
+  renderOverviewEvents();
 }
 
 function closeUncoupleConfirm() {
@@ -409,11 +525,13 @@ function renderEvents() {
 
   if (!state.profile?.coupleId) {
     renderEventEmptyState('請先建立或加入情侶配對，才能新增事件。');
+    renderOverviewSnapshot();
     return;
   }
 
   if (!state.events.length) {
     renderEventEmptyState('目前還沒有事件，先新增第一個共同計畫吧。');
+    renderOverviewSnapshot();
     return;
   }
 
@@ -468,6 +586,8 @@ function renderEvents() {
 
     elements.eventsList.appendChild(item);
   });
+
+  renderOverviewSnapshot();
 }
 
 function renderPhotos() {
@@ -541,6 +661,8 @@ function renderCoupleState() {
     setFormDisabled(elements.eventForm, true);
     setFormDisabled(elements.photoForm, true);
     renderIdentityCard();
+    renderMobileSummary();
+    renderOverviewSnapshot();
     return;
   }
 
@@ -553,6 +675,8 @@ function renderCoupleState() {
   setFormDisabled(elements.eventForm, !configured);
   setFormDisabled(elements.photoForm, !configured);
   renderIdentityCard();
+  renderMobileSummary();
+  renderOverviewSnapshot();
 }
 
 function syncCoupleSubscriptions(coupleId) {
@@ -636,6 +760,7 @@ function populateEventForm(eventItem) {
   elements.eventForm.elements.note.value = eventItem.note || '';
   elements.saveEventButton.textContent = '更新事件';
   elements.cancelEditButton.hidden = false;
+  setEventComposerOpen(true);
 }
 
 function disableAppIfNeeded() {
@@ -835,6 +960,14 @@ function bindEvents() {
   elements.displayNameForm.addEventListener('submit', handleDisplayNameSubmit);
   elements.joinCoupleForm.addEventListener('submit', handleJoinCouple);
   elements.eventForm.addEventListener('submit', handleEventSubmit);
+  elements.mobileTabButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      setActiveMobileTab(button.dataset.mobileTabButton || 'overview');
+    });
+  });
+  elements.toggleEventComposerButton.addEventListener('click', () => {
+    setEventComposerOpen(!state.isEventComposerOpen);
+  });
   elements.openUncoupleButton.addEventListener('click', openUncoupleConfirm);
   elements.cancelUncoupleButton.addEventListener('click', closeUncoupleConfirm);
   elements.confirmUncoupleButton.addEventListener('click', handleConfirmUncouple);
@@ -934,6 +1067,14 @@ function startAuthGuard() {
   });
 }
 
+function initMobileUi() {
+  syncMobilePanels();
+
+  MOBILE_MEDIA_QUERY.addEventListener('change', () => {
+    syncMobilePanels();
+  });
+}
+
 disableAppIfNeeded();
 resetEventForm();
 renderIdentityCard();
@@ -942,4 +1083,5 @@ renderEvents();
 renderPhotos();
 renderPet();
 bindEvents();
+initMobileUi();
 startAuthGuard();
