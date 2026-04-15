@@ -249,6 +249,25 @@ function applyOptimisticCoupleState(coupleId) {
   renderCoupleState();
 }
 
+function normalizeIncomingProfile(profile) {
+  if (!profile) {
+    return profile;
+  }
+
+  if (
+    !profile.coupleId
+    && state.profile?.coupleId
+    && state.couple?.id === state.profile.coupleId
+  ) {
+    return {
+      ...profile,
+      coupleId: state.profile.coupleId
+    };
+  }
+
+  return profile;
+}
+
 function getPetAnimationCandidates(skin) {
   const normalizedSkin = typeof skin === 'string' && skin.trim() ? skin.trim() : 'default';
 
@@ -893,8 +912,10 @@ function startAuthGuard() {
     }
 
     state.unsubscribeProfile = subscribeToUserProfile(user.uid, (profile) => {
-      state.profile = profile;
-      syncCoupleSubscriptions(profile?.coupleId || null);
+      const nextProfile = normalizeIncomingProfile(profile);
+
+      state.profile = nextProfile;
+      syncCoupleSubscriptions(nextProfile?.coupleId || null);
       renderIdentityCard();
       renderCoupleState();
     });
