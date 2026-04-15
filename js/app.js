@@ -394,6 +394,39 @@ function normalizeIncomingProfile(profile) {
   return profile;
 }
 
+function waitForOwnCoupleId(targetCoupleId, timeoutMs = 5000) {
+  if (!state.user?.uid || !targetCoupleId) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    let timeoutId = null;
+    let unsubscribe = null;
+
+    const cleanup = () => {
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
+
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+
+    timeoutId = window.setTimeout(() => {
+      cleanup();
+      reject(new Error('配對資料同步較慢，請稍後重新整理。'));
+    }, timeoutMs);
+
+    unsubscribe = subscribeToUserProfile(state.user.uid, (profile) => {
+      if (profile?.coupleId === targetCoupleId) {
+        cleanup();
+        resolve();
+      }
+    });
+  });
+}
+
 function getPetAnimationCandidates(skin) {
   const normalizedSkin = typeof skin === 'string' && skin.trim() ? skin.trim() : 'default';
 
@@ -807,6 +840,7 @@ async function handleCreateCouple() {
 
   try {
     const pairCode = await createCouple();
+    await waitForOwnCoupleId(pairCode);
     applyOptimisticCoupleState(pairCode);
     setMessage(elements.coupleMessage, `情侶配對建立成功，請分享配對碼：${pairCode}`, 'success');
   } catch (error) {
@@ -822,6 +856,7 @@ async function handleJoinCouple(event) {
 
   try {
     const pairCode = await joinCoupleByPairCode(formData.get('pairCode'));
+    await waitForOwnCoupleId(pairCode);
     applyOptimisticCoupleState(pairCode);
     elements.joinCoupleForm.reset();
     setMessage(elements.coupleMessage, `成功加入配對：${pairCode}`, 'success');
