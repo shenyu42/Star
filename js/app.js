@@ -40,6 +40,7 @@ const state = {
   couple: null,
   events: [],
   isRepairingCoupleId: false,
+  pendingCoupleId: '',
   petAnimation: null,
   petAnimationPath: null,
   partnerProfile: null,
@@ -191,6 +192,10 @@ function getDisplayNameText(profile) {
   return profile?.displayName?.trim() || '尚未命名';
 }
 
+function getEffectiveCoupleId() {
+  return state.profile?.coupleId || state.pendingCoupleId || '';
+}
+
 function getPartnerNameText() {
   if (!state.profile?.coupleId) {
     return '尚未加入配對';
@@ -232,6 +237,7 @@ function applyOptimisticCoupleState(coupleId) {
     return;
   }
 
+  state.pendingCoupleId = coupleId;
   state.profile = {
     ...(state.profile || {}),
     coupleId
@@ -256,13 +262,17 @@ function normalizeIncomingProfile(profile) {
 
   if (
     !profile.coupleId
-    && state.profile?.coupleId
-    && state.couple?.id === state.profile.coupleId
+    && getEffectiveCoupleId()
+    && state.couple?.id === getEffectiveCoupleId()
   ) {
     return {
       ...profile,
-      coupleId: state.profile.coupleId
+      coupleId: getEffectiveCoupleId()
     };
+  }
+
+  if (profile.coupleId) {
+    state.pendingCoupleId = '';
   }
 
   return profile;
@@ -515,7 +525,7 @@ function renderPhotos() {
 }
 
 function renderCoupleState() {
-  const coupleId = state.profile?.coupleId || '';
+  const coupleId = getEffectiveCoupleId();
   const memberCount = state.couple?.memberUids?.length || 0;
   const configured = isFirebaseConfigured();
   const coupled = Boolean(coupleId);
@@ -549,6 +559,7 @@ function syncCoupleSubscriptions(coupleId) {
   resetSubscriptions();
 
   if (!coupleId) {
+    state.pendingCoupleId = '';
     state.couple = null;
     state.events = [];
     state.partnerProfile = null;
@@ -695,14 +706,15 @@ async function handleJoinCouple(event) {
 }
 
 async function handleConfirmUncouple() {
-  if (!state.profile?.coupleId) {
+  if (!getEffectiveCoupleId()) {
     return;
   }
 
   setMessage(elements.coupleMessage, '', 'info');
 
   try {
-    await uncouple(state.profile.coupleId);
+    await uncouple(getEffectiveCoupleId());
+    state.pendingCoupleId = '';
     closeUncoupleConfirm();
     setMessage(elements.coupleMessage, '已解除配對，之後可以重新建立新的共享空間。', 'success');
   } catch (error) {
