@@ -40,6 +40,7 @@ const state = {
   activeMobileTab: 'overview',
   couple: null,
   events: [],
+  hasConfirmedCoupleSnapshot: false,
   isEventComposerOpen: false,
   isRepairingCoupleId: false,
   pendingCoupleId: '',
@@ -354,17 +355,12 @@ function applyOptimisticCoupleState(coupleId) {
   }
 
   state.pendingCoupleId = coupleId;
+  state.hasConfirmedCoupleSnapshot = false;
   state.profile = {
     ...(state.profile || {}),
     coupleId
   };
-  state.couple = state.couple?.id === coupleId
-    ? state.couple
-    : {
-        id: coupleId,
-        pairCode: coupleId,
-        memberUids: state.user?.uid ? [state.user.uid] : []
-      };
+  state.couple = state.couple?.id === coupleId ? state.couple : null;
 
   syncCoupleSubscriptions(coupleId);
   renderIdentityCard();
@@ -716,6 +712,7 @@ function syncCoupleSubscriptions(coupleId) {
   resetSubscriptions();
 
   if (!coupleId) {
+    state.hasConfirmedCoupleSnapshot = false;
     state.pendingCoupleId = '';
     state.couple = null;
     state.events = [];
@@ -729,7 +726,7 @@ function syncCoupleSubscriptions(coupleId) {
   }
 
   state.unsubscribeCouple = subscribeToCouple(coupleId, async (couple) => {
-    const hadCoupleBefore = Boolean(state.couple);
+    const hadConfirmedCoupleBefore = state.hasConfirmedCoupleSnapshot;
     state.couple = couple;
     state.partnerProfile = null;
 
@@ -739,6 +736,7 @@ function syncCoupleSubscriptions(coupleId) {
     }
 
     if (couple && state.user?.uid) {
+      state.hasConfirmedCoupleSnapshot = true;
       state.unsubscribePartnerProfile = subscribeToPartnerProfile(couple, state.user.uid, (profile) => {
         state.partnerProfile = profile;
         renderIdentityCard();
@@ -747,7 +745,7 @@ function syncCoupleSubscriptions(coupleId) {
 
     if (
       !couple
-      && hadCoupleBefore
+      && hadConfirmedCoupleBefore
       && getEffectiveCoupleId() === coupleId
       && state.user?.uid
       && !state.isRepairingCoupleId
