@@ -360,7 +360,20 @@ function applyOptimisticCoupleState(coupleId) {
     ...(state.profile || {}),
     coupleId
   };
-  state.couple = state.couple?.id === coupleId ? state.couple : null;
+  state.couple = state.couple?.id === coupleId
+    ? state.couple
+    : {
+        id: coupleId,
+        pairCode: coupleId,
+        memberUids: state.user?.uid ? [state.user.uid] : [],
+        score: state.couple?.score ?? 0,
+        pet: state.couple?.pet || {
+          name: 'Star',
+          level: 1,
+          exp: 0,
+          skin: 'default'
+        }
+      };
 
   syncCoupleSubscriptions(coupleId);
   renderIdentityCard();
@@ -372,14 +385,10 @@ function normalizeIncomingProfile(profile) {
     return profile;
   }
 
-  if (
-    !profile.coupleId
-    && getEffectiveCoupleId()
-    && state.couple?.id === getEffectiveCoupleId()
-  ) {
+  if (!profile.coupleId && state.pendingCoupleId) {
     return {
       ...profile,
-      coupleId: getEffectiveCoupleId()
+      coupleId: state.pendingCoupleId
     };
   }
 
