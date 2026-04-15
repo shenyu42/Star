@@ -1,11 +1,12 @@
 import {
+  deleteDoc,
   db,
   doc,
   ensureFirebaseConfigured,
   getDoc,
   onSnapshot,
-  runTransaction,
-  serverTimestamp
+  serverTimestamp,
+  updateDoc
 } from './firebase.js';
 import { requireCurrentUser, requireCurrentUserProfile } from './auth.js';
 
@@ -215,26 +216,23 @@ async function uncouple(coupleId) {
 
   const userRef = doc(db, 'users', user.uid);
   const coupleRef = doc(db, 'couples', coupleId);
+  const coupleSnapshot = await getDoc(coupleRef);
 
-  await runTransaction(db, async (transaction) => {
-    const coupleSnapshot = await transaction.get(coupleRef);
+  if (!coupleSnapshot.exists()) {
+    throw new Error('找不到這組配對資料。');
+  }
 
-    if (!coupleSnapshot.exists()) {
-      throw new Error('找不到這組配對資料。');
-    }
+  const couple = coupleSnapshot.data();
+  const memberUids = Array.isArray(couple.memberUids) ? couple.memberUids : [];
 
-    const couple = coupleSnapshot.data();
-    const memberUids = Array.isArray(couple.memberUids) ? couple.memberUids : [];
+  if (!memberUids.includes(user.uid)) {
+    throw new Error('你沒有解除這組配對的權限。');
+  }
 
-    if (!memberUids.includes(user.uid)) {
-      throw new Error('你沒有解除這組配對的權限。');
-    }
-
-    transaction.update(userRef, {
-      coupleId: null
-    });
-    transaction.delete(coupleRef);
+  await updateDoc(userRef, {
+    coupleId: null
   });
+  await deleteDoc(coupleRef);
 }
 
 function subscribeToCouple(coupleId, callback) {
