@@ -227,6 +227,28 @@ function openUncoupleConfirm() {
   elements.uncoupleConfirmCard.hidden = false;
 }
 
+function applyOptimisticCoupleState(coupleId) {
+  if (!coupleId) {
+    return;
+  }
+
+  state.profile = {
+    ...(state.profile || {}),
+    coupleId
+  };
+  state.couple = state.couple?.id === coupleId
+    ? state.couple
+    : {
+        id: coupleId,
+        pairCode: coupleId,
+        memberUids: state.user?.uid ? [state.user.uid] : []
+      };
+
+  syncCoupleSubscriptions(coupleId);
+  renderIdentityCard();
+  renderCoupleState();
+}
+
 function getPetAnimationCandidates(skin) {
   const normalizedSkin = typeof skin === 'string' && skin.trim() ? skin.trim() : 'default';
 
@@ -623,6 +645,7 @@ async function handleCreateCouple() {
 
   try {
     const pairCode = await createCouple();
+    applyOptimisticCoupleState(pairCode);
     setMessage(elements.coupleMessage, `情侶配對建立成功，請分享配對碼：${pairCode}`, 'success');
   } catch (error) {
     setMessage(elements.coupleMessage, error.message, 'error');
@@ -637,6 +660,7 @@ async function handleJoinCouple(event) {
 
   try {
     const pairCode = await joinCoupleByPairCode(formData.get('pairCode'));
+    applyOptimisticCoupleState(pairCode);
     elements.joinCoupleForm.reset();
     setMessage(elements.coupleMessage, `成功加入配對：${pairCode}`, 'success');
   } catch (error) {
