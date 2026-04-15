@@ -36,7 +36,8 @@ function mapSnapshotToPhotos(snapshot) {
   return snapshot.docs
     .map((docSnapshot) => ({
       id: docSnapshot.id,
-      ...docSnapshot.data()
+      ...docSnapshot.data(),
+      albumId: docSnapshot.data().albumId ?? null
     }))
     .sort((left, right) => toMillis(right.createdAt) - toMillis(left.createdAt));
 }
@@ -51,7 +52,7 @@ function validateImageFile(file) {
   }
 }
 
-async function uploadPhoto(file, coupleId) {
+async function uploadPhoto(file, coupleId, albumId = null) {
   ensureFirebaseConfigured();
   validateImageFile(file);
 
@@ -68,6 +69,7 @@ async function uploadPhoto(file, coupleId) {
   const downloadURL = await getDownloadURL(fileRef);
   const photoRef = await addDoc(collection(db, 'photos'), {
     coupleId: profile.coupleId,
+    albumId: albumId ?? null,
     storagePath,
     downloadURL,
     uploadedBy: user.uid,
@@ -100,8 +102,30 @@ function subscribeToPhotosByCouple(coupleId, callback) {
   });
 }
 
+function subscribeToPhotosByAlbum(coupleId, albumId, callback) {
+  ensureFirebaseConfigured();
+  const normalizedAlbumId = albumId ?? null;
+
+  if (normalizedAlbumId === null) {
+    return subscribeToPhotosByCouple(coupleId, (photos) => {
+      callback(photos.filter((photo) => (photo.albumId ?? null) === null));
+    });
+  }
+
+  const photosQuery = query(
+    collection(db, 'photos'),
+    where('coupleId', '==', coupleId),
+    where('albumId', '==', normalizedAlbumId)
+  );
+
+  return onSnapshot(photosQuery, (snapshot) => {
+    callback(mapSnapshotToPhotos(snapshot));
+  });
+}
+
 export {
   getPhotosByCouple,
+  subscribeToPhotosByAlbum,
   subscribeToPhotosByCouple,
   uploadPhoto,
   validateImageFile

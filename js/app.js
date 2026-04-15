@@ -18,6 +18,7 @@ import {
   subscribeToPartnerProfile,
   uncouple
 } from './couple.js';
+import { createAlbum, subscribeToAlbumsByCouple } from './albums.js';
 import {
   createEvent,
   deleteEvent,
@@ -25,7 +26,7 @@ import {
   updateEvent
 } from './events.js';
 import { addScore, updatePetExp, updatePetField } from './pet.js';
-import { subscribeToPhotosByCouple, uploadPhoto } from './photos.js';
+import { subscribeToPhotosByAlbum, uploadPhoto } from './photos.js';
 import {
   clearChildren,
   formatDateTime,
@@ -38,7 +39,10 @@ import {
 
 const state = {
   activeMobileTab: 'overview',
+  albums: [],
   couple: null,
+  currentAlbumId: null,
+  currentAlbumView: false,
   events: [],
   hasConfirmedCoupleSnapshot: false,
   isEventComposerOpen: false,
@@ -50,16 +54,20 @@ const state = {
   photos: [],
   profile: null,
   user: null,
+  unsubscribeAlbumPhotos: null,
+  unsubscribeAlbums: null,
   unsubscribeCouple: null,
   unsubscribeEvents: null,
   unsubscribePartnerProfile: null,
-  unsubscribePhotos: null,
   unsubscribeProfile: null
 };
 
 const elements = {
   addExpButton: document.querySelector('#addExpButton'),
   addScoreButton: document.querySelector('#addScoreButton'),
+  albumForm: document.querySelector('#albumForm'),
+  albumNameInput: document.querySelector('#albumNameInput'),
+  albumsList: document.querySelector('#albumsList'),
   appFirebaseNotice: document.querySelector('#appFirebaseNotice'),
   appStatus: document.querySelector('#appStatus'),
   cancelUncoupleButton: document.querySelector('#cancelUncoupleButton'),
@@ -108,6 +116,11 @@ const elements = {
   petPlaceholder: document.querySelector('#petPlaceholder'),
   petSkin: document.querySelector('#petSkin'),
   petSkinSelect: document.querySelector('#petSkinSelect'),
+  photoAlbumDetailView: document.querySelector('#photoAlbumDetailView'),
+  photoAlbumHint: document.querySelector('#photoAlbumHint'),
+  photoAlbumTitle: document.querySelector('#photoAlbumTitle'),
+  photoAlbumsView: document.querySelector('#photoAlbumsView'),
+  photoBackButton: document.querySelector('#photoBackButton'),
   photoFile: document.querySelector('#photoFile'),
   photoForm: document.querySelector('#photoForm'),
   photoMessage: document.querySelector('#photoMessage'),
@@ -128,10 +141,11 @@ let lottieLoaderPromise = null;
 
 function resetSubscriptions() {
   const unsubscribers = [
+    state.unsubscribeAlbumPhotos,
+    state.unsubscribeAlbums,
     state.unsubscribeCouple,
     state.unsubscribeEvents,
-    state.unsubscribePartnerProfile,
-    state.unsubscribePhotos
+    state.unsubscribePartnerProfile
   ];
 
   unsubscribers.forEach((unsubscribe) => {
@@ -140,10 +154,11 @@ function resetSubscriptions() {
     }
   });
 
+  state.unsubscribeAlbumPhotos = null;
+  state.unsubscribeAlbums = null;
   state.unsubscribeCouple = null;
   state.unsubscribeEvents = null;
   state.unsubscribePartnerProfile = null;
-  state.unsubscribePhotos = null;
 }
 
 function resetEventForm() {
@@ -168,6 +183,97 @@ function renderPhotoEmptyState(message) {
   item.className = 'photo-card muted-text';
   item.textContent = message;
   elements.photosList.appendChild(item);
+}
+
+function getCurrentAlbumName() {
+  if (state.currentAlbumId === null) {
+    return '未分類';
+  }
+
+  return state.albums.find((album) => album.id === state.currentAlbumId)?.name || '相簿';
+}
+
+function renderAlbums() {
+  clearChildren(elements.albumsList);
+
+  const items = [
+    {
+      id: '',
+      name: '未分類',
+      description: '查看還沒有分配到任何相簿的照片。'
+    },
+    ...state.albums.map((album) => ({
+      id: album.id,
+      name: album.name,
+      description: '點開後可查看相簿內照片並直接上傳到這本相簿。'
+    }))
+  ];
+
+  if (!getEffectiveCoupleId()) {
+    const item = document.createElement('li');
+    item.className = 'item-card muted-text';
+    item.textContent = '請先建立或加入情侶配對，才能使用共享相簿。';
+    elements.albumsList.appendChild(item);
+    return;
+  }
+
+  items.forEach((album) => {
+    const item = document.createElement('li');
+    item.className = 'item-card album-card';
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'album-button secondary-button';
+    button.dataset.albumId = album.id;
+    const albumName = document.createElement('strong');
+    albumName.textContent = album.name;
+
+    const albumDescription = document.createElement('span');
+    albumDescription.textContent = album.description;
+
+    button.append(albumName, albumDescription);
+
+    item.appendChild(button);
+    elements.albumsList.appendChild(item);
+  });
+}
+
+function renderPhotoPanel() {
+  const inAlbumView = state.currentAlbumView;
+  const albumName = getCurrentAlbumName();
+
+  elements.photoAlbumsView.hidden = inAlbumView;
+  elements.photoAlbumDetailView.hidden = !inAlbumView;
+  elements.photoAlbumTitle.textContent = albumName;
+  elements.photoAlbumHint.textContent = state.currentAlbumId === null
+    ? '這裡會顯示所有還沒分進相簿的照片。'
+    : '這個相簿裡的照片會同步顯示在兩人的共享空間。';
+}
+
+function stopAlbumPhotoSubscription() {
+  if (typeof state.unsubscribeAlbumPhotos === 'function') {
+    state.unsubscribeAlbumPhotos();
+  }
+
+  state.unsubscribeAlbumPhotos = null;
+}
+
+function subscribeAlbumPhotosForCurrentView(coupleId) {
+  stopAlbumPhotoSubscription();
+
+  if (!coupleId || !state.currentAlbumView) {
+    state.photos = [];
+    renderPhotos();
+    renderPhotoPanel();
+    return;
+  }
+
+  state.unsubscribeAlbumPhotos = subscribeToPhotosByAlbum(coupleId, state.currentAlbumId, (photos) => {
+    state.photos = photos;
+    renderPhotos();
+  });
+
+  renderPhotoPanel();
 }
 
 function renderPetPlaceholder(message) {
@@ -631,6 +737,10 @@ function renderEvents() {
 function renderPhotos() {
   clearChildren(elements.photosList);
 
+  if (!state.currentAlbumView) {
+    return;
+  }
+
   if (!getEffectiveCoupleId()) {
     renderPhotoEmptyState('請先建立或加入情侶配對，才能上傳照片。');
     return;
@@ -722,6 +832,9 @@ function syncCoupleSubscriptions(coupleId) {
 
   if (!coupleId) {
     state.hasConfirmedCoupleSnapshot = false;
+    state.albums = [];
+    state.currentAlbumId = null;
+    state.currentAlbumView = false;
     state.pendingCoupleId = '';
     state.couple = null;
     state.events = [];
@@ -729,6 +842,8 @@ function syncCoupleSubscriptions(coupleId) {
     state.photos = [];
     renderCoupleState();
     renderPet();
+    renderAlbums();
+    renderPhotoPanel();
     renderEvents();
     renderPhotos();
     return;
@@ -781,10 +896,24 @@ function syncCoupleSubscriptions(coupleId) {
     renderEvents();
   });
 
-  state.unsubscribePhotos = subscribeToPhotosByCouple(coupleId, (photos) => {
-    state.photos = photos;
-    renderPhotos();
+  state.unsubscribeAlbums = subscribeToAlbumsByCouple(coupleId, (albums) => {
+    state.albums = albums;
+
+    if (
+      state.currentAlbumId
+      && !albums.some((album) => album.id === state.currentAlbumId)
+    ) {
+      state.currentAlbumId = null;
+      state.currentAlbumView = false;
+      stopAlbumPhotoSubscription();
+      state.photos = [];
+    }
+
+    renderAlbums();
+    renderPhotoPanel();
   });
+
+  subscribeAlbumPhotosForCurrentView(coupleId);
 }
 
 function findEventById(eventId) {
@@ -808,6 +937,7 @@ function disableAppIfNeeded() {
   const missingFields = getMissingFirebaseConfigFields();
 
   renderFirebaseNotice(elements.appFirebaseNotice, missingFields);
+  setFormDisabled(elements.albumForm, !configured);
   setFormDisabled(elements.eventForm, !configured);
   setFormDisabled(elements.photoForm, !configured);
   elements.createCoupleButton.disabled = !configured;
@@ -984,7 +1114,7 @@ async function handlePhotoSubmit(event) {
   const file = elements.photoFile.files?.[0];
 
   try {
-    await uploadPhoto(file, currentCoupleId);
+    await uploadPhoto(file, currentCoupleId, state.currentAlbumId);
     elements.photoForm.reset();
     setMessage(elements.photoMessage, '照片上傳成功。', 'success');
   } catch (error) {
@@ -1001,7 +1131,67 @@ async function handleLogout() {
   }
 }
 
+async function handleAlbumCreate(event) {
+  event.preventDefault();
+  setMessage(elements.photoMessage, '', 'info');
+
+  const currentCoupleId = getEffectiveCoupleId();
+
+  if (!currentCoupleId) {
+    setMessage(elements.photoMessage, '請先建立或加入情侶配對。', 'warning');
+    return;
+  }
+
+  const albumName = elements.albumNameInput.value.trim();
+
+  if (!albumName) {
+    setMessage(elements.photoMessage, '請輸入相簿名稱。', 'warning');
+    return;
+  }
+
+  try {
+    const albumId = await createAlbum(currentCoupleId, albumName);
+    elements.albumForm.reset();
+    state.currentAlbumId = albumId;
+    state.currentAlbumView = true;
+    subscribeAlbumPhotosForCurrentView(currentCoupleId);
+    renderPhotoPanel();
+    setMessage(elements.photoMessage, '相簿建立成功。', 'success');
+  } catch (error) {
+    setMessage(elements.photoMessage, error.message, 'error');
+  }
+}
+
+function handleAlbumsListClick(event) {
+  if (!(event.target instanceof HTMLElement)) {
+    return;
+  }
+
+  const button = event.target.closest('[data-album-id]');
+
+  if (!(button instanceof HTMLElement)) {
+    return;
+  }
+
+  state.currentAlbumId = button.dataset.albumId || null;
+  state.currentAlbumView = true;
+  subscribeAlbumPhotosForCurrentView(getEffectiveCoupleId());
+  renderPhotoPanel();
+}
+
+function handlePhotoBack() {
+  state.currentAlbumView = false;
+  state.currentAlbumId = null;
+  stopAlbumPhotoSubscription();
+  state.photos = [];
+  renderPhotoPanel();
+  renderPhotos();
+  setMessage(elements.photoMessage, '', 'info');
+}
+
 function bindEvents() {
+  elements.albumForm.addEventListener('submit', handleAlbumCreate);
+  elements.albumsList.addEventListener('click', handleAlbumsListClick);
   elements.createCoupleButton.addEventListener('click', handleCreateCouple);
   elements.displayNameForm.addEventListener('submit', handleDisplayNameSubmit);
   elements.joinCoupleForm.addEventListener('submit', handleJoinCouple);
@@ -1085,6 +1275,7 @@ function bindEvents() {
     setMessage(elements.eventMessage, '已取消編輯。', 'info');
   });
   elements.eventsList.addEventListener('click', handleEventListClick);
+  elements.photoBackButton.addEventListener('click', handlePhotoBack);
   elements.photoForm.addEventListener('submit', handlePhotoSubmit);
   elements.logoutButton.addEventListener('click', handleLogout);
 }
@@ -1132,6 +1323,8 @@ function initMobileUi() {
 disableAppIfNeeded();
 resetEventForm();
 renderIdentityCard();
+renderAlbums();
+renderPhotoPanel();
 renderCoupleState();
 renderEvents();
 renderPhotos();

@@ -318,6 +318,46 @@
             <p>把一起的瞬間存進雲端，之後可以慢慢累積成你們的共享相簿。</p>
           </div>
 
+          <div id="photoAlbumsView" class="photo-view-stack">
+            <div class="subcard photo-albums-card">
+              <div class="subsection-heading">
+                <h3>相簿列表</h3>
+                <p>先建立分類，再把你們的照片收進各自的相簿。</p>
+              </div>
+
+              <form id="albumForm" class="album-create-form">
+                <label class="field">
+                  <span>相簿名稱</span>
+                  <input
+                    id="albumNameInput"
+                    name="albumName"
+                    type="text"
+                    placeholder="例如：旅行、約會、日常"
+                    maxlength="32"
+                    required
+                  />
+                </label>
+                <button id="createAlbumButton" type="submit" class="secondary-button">建立相簿</button>
+              </form>
+            </div>
+
+            <ul id="albumsList" class="album-list"></ul>
+          </div>
+
+          <div id="photoAlbumDetailView" class="photo-view-stack" hidden>
+            <div class="subcard photo-album-header">
+              <div class="photo-album-header-row">
+                <button id="photoBackButton" type="button" class="secondary-button">
+                  返回相簿列表
+                </button>
+                <div>
+                  <span class="mini-label">目前相簿</span>
+                  <h3 id="photoAlbumTitle" class="photo-album-title">未分類</h3>
+                </div>
+              </div>
+              <p id="photoAlbumHint" class="item-meta">這個相簿裡的照片會同步顯示在兩人的共享空間。</p>
+            </div>
+
           <div class="subcard photo-upload-card">
             <form id="photoForm" class="stack">
               <div class="upload-box">
@@ -336,10 +376,13 @@
               <button type="submit">上傳照片</button>
             </form>
 
-            <p id="photoMessage" class="message" hidden></p>
+            <p class="message" hidden></p>
           </div>
 
           <ul id="photosList" class="photo-list photo-gallery"></ul>
+          </div>
+
+          <p id="photoMessage" class="message" hidden></p>
         </section>
 
         <section id="petPanel" class="panel mobile-tab-panel" data-mobile-tab-panel="pet">

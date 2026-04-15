@@ -825,6 +825,68 @@ h3 {
   background: #fffdfa;
 }
 
+.photo-view-stack {
+  display: grid;
+  gap: 16px;
+}
+
+.photo-albums-card,
+.photo-album-header {
+  background: #fffdfa;
+}
+
+.album-create-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.album-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.album-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.album-button {
+  width: 100%;
+  display: grid;
+  gap: 0.35rem;
+  justify-items: start;
+  padding: 1rem 1.05rem;
+  border: 0;
+  border-radius: 18px;
+  text-align: left;
+}
+
+.album-button strong {
+  font-size: 1rem;
+}
+
+.album-button span {
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.photo-album-header-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.photo-album-title {
+  margin-bottom: 0;
+}
+
 .photo-list {
   list-style: none;
   padding: 0;
@@ -1234,6 +1296,7 @@ h3 {
   .two-column-grid,
   .identity-grid,
   .field-row,
+  .album-create-form,
   .pet-edit-grid {
     grid-template-columns: 1fr;
   }
@@ -1405,6 +1468,11 @@ h3 {
 
   .photo-upload-card {
     margin-bottom: 12px;
+  }
+
+  .photo-album-header-row {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .upload-box {
