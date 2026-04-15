@@ -30,6 +30,8 @@ import {
 const state = {
   couple: null,
   events: [],
+  petAnimation: null,
+  petAnimationPath: null,
   photos: [],
   profile: null,
   user: null,
@@ -57,11 +59,14 @@ const elements = {
   memberCountValue: document.querySelector('#memberCountValue'),
   pairActions: document.querySelector('#pairActions'),
   pairCodeValue: document.querySelector('#pairCodeValue'),
+  petAnimation: document.querySelector('#petAnimation'),
   petExp: document.querySelector('#petExp'),
+  petExpBar: document.querySelector('#petExpBar'),
   petLevel: document.querySelector('#petLevel'),
   petMessage: document.querySelector('#petMessage'),
   petName: document.querySelector('#petName'),
   petNameInput: document.querySelector('#petNameInput'),
+  petPlaceholder: document.querySelector('#petPlaceholder'),
   petSkin: document.querySelector('#petSkin'),
   petSkinSelect: document.querySelector('#petSkinSelect'),
   photoFile: document.querySelector('#photoFile'),
@@ -74,6 +79,10 @@ const elements = {
   scoreValue: document.querySelector('#scoreValue'),
   userEmail: document.querySelector('#userEmail')
 };
+
+const PET_EXP_PER_LEVEL = 20;
+const LOTTIE_CDN_URL = 'https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js';
+let lottieLoaderPromise = null;
 
 function resetSubscriptions() {
   const unsubscribers = [
@@ -116,6 +125,15 @@ function renderPhotoEmptyState(message) {
   elements.photosList.appendChild(item);
 }
 
+function renderPetPlaceholder(message) {
+  if (!elements.petPlaceholder) {
+    return;
+  }
+
+  elements.petPlaceholder.textContent = message;
+  elements.petPlaceholder.hidden = false;
+}
+
 function renderPet() {
   const couple = state.couple;
 
@@ -125,17 +143,149 @@ function renderPet() {
     elements.petLevel.textContent = '—';
     elements.petExp.textContent = '—';
     elements.petSkin.textContent = '—';
+    elements.petExpBar.style.width = '0%';
+    renderPetAnimation('default');
     return;
   }
 
   elements.scoreValue.textContent = couple.score ?? 0;
 
   const pet = couple.pet || {};
+  const exp = Number(pet.exp ?? 0);
+  const progress = Math.max(0, Math.min(exp / PET_EXP_PER_LEVEL, 1)) * 100;
 
   elements.petName.textContent = pet.name || '—';
   elements.petLevel.textContent = pet.level ?? '—';
-  elements.petExp.textContent = pet.exp ?? '—';
+  elements.petExp.textContent = `${exp} / ${PET_EXP_PER_LEVEL}`;
   elements.petSkin.textContent = pet.skin || '—';
+  elements.petExpBar.style.width = `${progress}%`;
+  renderPetAnimation(pet.skin || 'default');
+}
+
+function getPetAnimationCandidates(skin) {
+  const normalizedSkin = typeof skin === 'string' && skin.trim() ? skin.trim() : 'default';
+
+  return Array.from(new Set([
+    `./images/pets/pet-${normalizedSkin}.json`,
+    './images/pets/pet-default.json'
+  ]));
+}
+
+function ensureLottieLoaded() {
+  if (window.lottie) {
+    return Promise.resolve(window.lottie);
+  }
+
+  if (lottieLoaderPromise) {
+    return lottieLoaderPromise;
+  }
+
+  lottieLoaderPromise = new Promise((resolve, reject) => {
+    const existingScript = document.querySelector('script[data-lottie-loader="true"]');
+
+    if (existingScript) {
+      existingScript.addEventListener('load', () => resolve(window.lottie), { once: true });
+      existingScript.addEventListener(
+        'error',
+        () => {
+          lottieLoaderPromise = null;
+          reject(new Error('寵物動畫載入失敗。'));
+        },
+        { once: true }
+      );
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = LOTTIE_CDN_URL;
+    script.async = true;
+    script.dataset.lottieLoader = 'true';
+    script.onload = () => {
+      if (window.lottie) {
+        resolve(window.lottie);
+        return;
+      }
+
+      lottieLoaderPromise = null;
+      reject(new Error('寵物動畫載入失敗。'));
+    };
+    script.onerror = () => {
+      lottieLoaderPromise = null;
+      reject(new Error('寵物動畫載入失敗。'));
+    };
+    document.head.appendChild(script);
+  });
+
+  return lottieLoaderPromise;
+}
+
+async function fetchPetAnimationData(skin) {
+  const candidates = getPetAnimationCandidates(skin);
+
+  for (const candidate of candidates) {
+    try {
+      const response = await fetch(candidate);
+
+      if (!response.ok) {
+        throw new Error(`Animation missing: ${candidate}`);
+      }
+
+      return {
+        animationData: await response.json(),
+        path: candidate
+      };
+    } catch (error) {
+      continue;
+    }
+  }
+
+  throw new Error('找不到可用的寵物動畫。');
+}
+
+async function renderPetAnimation(skin) {
+  if (!elements.petAnimation || !elements.petPlaceholder) {
+    return;
+  }
+
+  if (!state.petAnimation) {
+    renderPetPlaceholder('寵物載入中');
+  }
+
+  try {
+    const [{ animationData, path }, lottie] = await Promise.all([
+      fetchPetAnimationData(skin),
+      ensureLottieLoaded()
+    ]);
+
+    if (state.petAnimation && state.petAnimationPath === path) {
+      elements.petPlaceholder.hidden = true;
+      return;
+    }
+
+    if (state.petAnimation) {
+      state.petAnimation.destroy();
+    }
+
+    elements.petAnimation.innerHTML = '';
+    state.petAnimation = lottie.loadAnimation({
+      container: elements.petAnimation,
+      renderer: 'svg',
+      loop: true,
+      autoplay: true,
+      animationData
+    });
+    state.petAnimationPath = path;
+    elements.petPlaceholder.hidden = true;
+  } catch (error) {
+    if (state.petAnimation) {
+      state.petAnimation.destroy();
+      state.petAnimation = null;
+      state.petAnimationPath = null;
+    }
+
+    elements.petAnimation.innerHTML = '';
+    renderPetPlaceholder('寵物展示暫時無法載入。');
+  }
 }
 
 function renderEvents() {
@@ -153,12 +303,13 @@ function renderEvents() {
 
   state.events.forEach((eventItem) => {
     const item = document.createElement('li');
-    item.className = 'item-card';
+    item.className = 'item-card event-card';
 
     const titleRow = document.createElement('div');
     titleRow.className = 'item-title-row';
 
     const titleBlock = document.createElement('div');
+    titleBlock.className = 'event-title-block';
     const title = document.createElement('strong');
     title.textContent = eventItem.title;
 
@@ -176,14 +327,14 @@ function renderEvents() {
 
     const editButton = document.createElement('button');
     editButton.type = 'button';
-    editButton.className = 'secondary-button';
+    editButton.className = 'secondary-button small-button';
     editButton.textContent = '編輯';
     editButton.dataset.action = 'edit-event';
     editButton.dataset.eventId = eventItem.id;
 
     const deleteButton = document.createElement('button');
     deleteButton.type = 'button';
-    deleteButton.className = 'danger-button';
+    deleteButton.className = 'danger-button small-button';
     deleteButton.textContent = '刪除';
     deleteButton.dataset.action = 'delete-event';
     deleteButton.dataset.eventId = eventItem.id;
@@ -231,21 +382,27 @@ function renderPhotos() {
     frame.appendChild(image);
     item.appendChild(frame);
 
+    const body = document.createElement('div');
+    body.className = 'photo-body';
+
     const name = document.createElement('strong');
     name.textContent = photoItem.originalFileName || '已上傳照片';
-    item.appendChild(name);
+    body.appendChild(name);
 
     const meta = document.createElement('p');
     meta.className = 'photo-meta';
     meta.textContent = `上傳時間：${formatDateTime(photoItem.createdAt)}`;
-    item.appendChild(meta);
+    body.appendChild(meta);
 
     const link = document.createElement('a');
+    link.className = 'photo-link';
     link.href = photoItem.downloadURL;
     link.target = '_blank';
     link.rel = 'noreferrer';
-    link.textContent = '開啟原圖';
-    item.appendChild(link);
+    link.textContent = '查看';
+    body.appendChild(link);
+
+    item.appendChild(body);
 
     elements.photosList.appendChild(item);
   });

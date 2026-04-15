@@ -12,14 +12,17 @@
   </head>
   <body class="page">
     <main class="page-shell app-shell">
-      <header class="panel topbar">
-        <div>
-          <p class="eyebrow">主頁</p>
-          <h1 class="page-title">共享空間</h1>
+      <header class="app-header">
+        <div class="app-header-copy">
+          <p class="eyebrow">星伴侶共享</p>
+          <h1 class="page-title">你們的共享首頁</h1>
+          <p class="app-subtitle">
+            把共同事件、照片、分數和寵物放進同一個溫柔又清楚的空間。
+          </p>
         </div>
 
         <div class="topbar-actions">
-          <div class="user-card">
+          <div class="user-card compact-user-card">
             <span class="user-label">目前登入</span>
             <strong id="userEmail">載入中...</strong>
           </div>
@@ -29,37 +32,45 @@
         </div>
       </header>
 
-      <p id="appStatus" class="message" hidden></p>
-      <p id="appFirebaseNotice" class="message" hidden></p>
+      <section class="status-strip">
+        <p id="appStatus" class="message" hidden></p>
+        <p id="appFirebaseNotice" class="message" hidden></p>
+      </section>
 
       <section class="app-grid">
-        <section class="panel">
+        <section class="panel couple-panel">
           <div class="section-heading">
             <h2>情侶狀態</h2>
-            <p>可以建立一組配對，或透過配對碼加入。</p>
+            <p>建立或加入配對後，你們就會共享同一份事件、照片與寵物進度。</p>
           </div>
 
-          <dl class="meta-list">
-            <div>
-              <dt>狀態</dt>
-              <dd id="coupleStatusText">檢查中...</dd>
+          <div class="couple-summary">
+            <div class="status-chip-row">
+              <div class="status-chip">
+                <span class="mini-label">目前狀態</span>
+                <strong id="coupleStatusText">檢查中...</strong>
+              </div>
+              <div class="member-chip">
+                <span class="mini-label">成員數</span>
+                <strong id="memberCountValue">0</strong>
+              </div>
             </div>
-            <div>
-              <dt>配對碼</dt>
-              <dd id="pairCodeValue">尚未提供</dd>
-            </div>
-            <div>
-              <dt>成員數</dt>
-              <dd id="memberCountValue">0</dd>
-            </div>
-          </dl>
 
-          <div id="pairActions" class="stack">
+            <div class="pair-code-card">
+              <span class="mini-label">配對碼</span>
+              <strong id="pairCodeValue" class="pair-code-text">尚未提供</strong>
+              <p class="pair-code-caption">
+                把這組代碼分享給另一半，就能加入同一個共享空間。
+              </p>
+            </div>
+          </div>
+
+          <div id="pairActions" class="pair-action-stack">
             <button id="createCoupleButton" type="button">
               建立情侶配對
             </button>
 
-            <form id="joinCoupleForm" class="stack">
+            <form id="joinCoupleForm" class="pair-join-form">
               <label class="field">
                 <span>輸入配對碼加入</span>
                 <input
@@ -85,121 +96,210 @@
         <section id="eventPanel" class="panel">
           <div class="section-heading">
             <h2>共享事件</h2>
-            <p>同一組情侶的兩位成員都會看到相同的共享事件資料。</p>
+            <p>把約會、紀念日、一起要做的事都收進同一條時間線。</p>
           </div>
 
-          <form id="eventForm" class="stack">
-            <input id="eventId" name="eventId" type="hidden" />
+          <div class="event-layout">
+            <div class="subcard event-composer-card">
+              <div class="subsection-heading">
+                <h3>新增或編輯事件</h3>
+                <p>先把下一個共同計畫寫下來。</p>
+              </div>
 
-            <label class="field">
-              <span>標題</span>
-              <input
-                id="eventTitle"
-                name="title"
-                type="text"
-                placeholder="例如：電影之夜"
-                required
-              />
-            </label>
+              <form id="eventForm" class="stack">
+                <input id="eventId" name="eventId" type="hidden" />
 
-            <div class="field-row">
-              <label class="field">
-                <span>開始時間</span>
-                <input id="eventStartAt" name="startAt" type="datetime-local" required />
-              </label>
+                <label class="field">
+                  <span>標題</span>
+                  <input
+                    id="eventTitle"
+                    name="title"
+                    type="text"
+                    placeholder="例如：電影之夜"
+                    required
+                  />
+                </label>
 
-              <label class="field">
-                <span>結束時間</span>
-                <input id="eventEndAt" name="endAt" type="datetime-local" />
-              </label>
+                <div class="field-row">
+                  <label class="field">
+                    <span>開始時間</span>
+                    <input id="eventStartAt" name="startAt" type="datetime-local" required />
+                  </label>
+
+                  <label class="field">
+                    <span>結束時間</span>
+                    <input id="eventEndAt" name="endAt" type="datetime-local" />
+                  </label>
+                </div>
+
+                <label class="checkbox">
+                  <input id="eventAllDay" name="allDay" type="checkbox" />
+                  <span>全天事件</span>
+                </label>
+
+                <label class="field">
+                  <span>備註</span>
+                  <textarea
+                    id="eventNote"
+                    name="note"
+                    rows="4"
+                    placeholder="可選填備註"
+                  ></textarea>
+                </label>
+
+                <div class="button-row">
+                  <button id="saveEventButton" type="submit">儲存事件</button>
+                  <button
+                    id="cancelEditButton"
+                    class="secondary-button"
+                    type="button"
+                    hidden
+                  >
+                    取消編輯
+                  </button>
+                </div>
+              </form>
+
+              <p id="eventMessage" class="message" hidden></p>
             </div>
 
-            <label class="checkbox">
-              <input id="eventAllDay" name="allDay" type="checkbox" />
-              <span>全天事件</span>
-            </label>
+            <div class="subcard event-feed-card">
+              <div class="subsection-heading">
+                <h3>事件列表</h3>
+                <p>這裡會同步顯示兩人共同的安排。</p>
+              </div>
 
-            <label class="field">
-              <span>備註</span>
-              <textarea
-                id="eventNote"
-                name="note"
-                rows="4"
-                placeholder="可選填備註"
-              ></textarea>
-            </label>
-
-            <div class="button-row">
-              <button id="saveEventButton" type="submit">儲存事件</button>
-              <button
-                id="cancelEditButton"
-                class="secondary-button"
-                type="button"
-                hidden
-              >
-                取消編輯
-              </button>
+              <ul id="eventsList" class="item-list event-list"></ul>
             </div>
-          </form>
-
-          <p id="eventMessage" class="message" hidden></p>
-          <ul id="eventsList" class="item-list"></ul>
+          </div>
         </section>
 
         <section id="photoPanel" class="panel">
           <div class="section-heading">
-            <h2>照片</h2>
-            <p>圖片會儲存在雲端，並同步把照片資料寫入資料庫。</p>
+            <h2>照片相簿</h2>
+            <p>把一起的瞬間存進雲端，之後可以慢慢累積成你們的共享相簿。</p>
           </div>
 
-          <form id="photoForm" class="stack">
-            <label class="field">
-              <span>選擇圖片</span>
-              <input id="photoFile" name="photo" type="file" accept="image/*" required />
-            </label>
+          <div class="subcard photo-upload-card">
+            <form id="photoForm" class="stack">
+              <div class="upload-box">
+                <div class="upload-copy">
+                  <span class="mini-label">上傳新照片</span>
+                  <strong>選一張想收藏的回憶</strong>
+                  <p>支援常見圖片格式，會同步存到雲端與資料庫。</p>
+                </div>
 
-            <button type="submit">上傳照片</button>
-          </form>
+                <label class="field upload-field">
+                  <span>選擇圖片</span>
+                  <input id="photoFile" name="photo" type="file" accept="image/*" required />
+                </label>
+              </div>
 
-          <p id="photoMessage" class="message" hidden></p>
-          <ul id="photosList" class="photo-list"></ul>
+              <button type="submit">上傳照片</button>
+            </form>
+
+            <p id="photoMessage" class="message" hidden></p>
+          </div>
+
+          <ul id="photosList" class="photo-list photo-gallery"></ul>
         </section>
 
         <section id="petPanel" class="panel">
           <div class="section-heading">
             <h2>分數與寵物</h2>
-            <p>兩人共享的分數與寵物狀態。</p>
+            <p>把共同累積的分數和寵物成長變成這個首頁最有記憶點的角落。</p>
           </div>
 
-          <dl class="meta-list">
-            <div><dt>分數</dt><dd id="scoreValue">—</dd></div>
-            <div><dt>寵物名稱</dt><dd id="petName">—</dd></div>
-            <div><dt>等級</dt><dd id="petLevel">—</dd></div>
-            <div><dt>Exp</dt><dd id="petExp">—</dd></div>
-            <div><dt>外觀</dt><dd id="petSkin">—</dd></div>
-          </dl>
+          <div class="pet-hero">
+            <div class="pet-identity">
+              <span class="mini-label">共享分數</span>
+              <div class="score-display-wrap">
+                <strong id="scoreValue" class="score-display">—</strong>
+                <span class="score-unit">pts</span>
+              </div>
 
-          <div class="stack">
-            <div class="button-row">
-              <button id="addScoreButton" type="button">+10 分</button>
-              <button id="addExpButton" type="button">寵物 +5 exp</button>
+              <div class="pet-name-row">
+                <div>
+                  <span class="mini-label">寵物名稱</span>
+                  <h3 id="petName" class="pet-name-display">—</h3>
+                </div>
+                <div class="pet-level-badge">Lv.<span id="petLevel">—</span></div>
+              </div>
+
+              <div class="pet-progress-card">
+                <div class="pet-progress-head">
+                  <span class="mini-label">成長值</span>
+                  <strong id="petExp">—</strong>
+                </div>
+                <div class="progress-track">
+                  <span id="petExpBar" class="progress-fill"></span>
+                </div>
+              </div>
+
+              <div class="pet-meta-row">
+                <div class="pet-mini-card">
+                  <span class="mini-label">外觀</span>
+                  <strong id="petSkin">—</strong>
+                </div>
+              </div>
             </div>
 
-            <label class="field">
-              <span>寵物名稱</span>
-              <input id="petNameInput" type="text" placeholder="輸入新名稱" />
-            </label>
-            <button id="savePetNameButton" type="button" class="secondary-button">儲存名稱</button>
+            <div class="pet-stage">
+              <div class="pet-stage-card">
+                <div class="pet-stage-header">
+                  <span class="mini-label">寵物展示</span>
+                  <span class="stage-chip">Lottie</span>
+                </div>
 
-            <label class="field">
-              <span>外觀</span>
-              <select id="petSkinSelect">
-                <option value="default">default</option>
-                <option value="gold">gold</option>
-                <option value="dark">dark</option>
-              </select>
-            </label>
-            <button id="savePetSkinButton" type="button" class="secondary-button">儲存外觀</button>
+                <div class="pet-animation-shell">
+                  <div id="petAnimation" class="pet-animation" aria-hidden="true"></div>
+                  <div id="petPlaceholder" class="pet-placeholder">寵物載入中</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pet-actions-grid">
+            <div class="subcard pet-action-card">
+              <div class="subsection-heading">
+                <h3>互動</h3>
+                <p>用最簡單的方式累積分數與經驗值。</p>
+              </div>
+
+              <div class="button-row pet-button-row">
+                <button id="addScoreButton" type="button">+10 分</button>
+                <button id="addExpButton" type="button" class="secondary-button">寵物 +5 exp</button>
+              </div>
+            </div>
+
+            <div class="subcard pet-action-card">
+              <div class="subsection-heading">
+                <h3>編輯寵物</h3>
+                <p>先保留最基本的名稱與外觀調整。</p>
+              </div>
+
+              <div class="pet-edit-grid">
+                <label class="field">
+                  <span>寵物名稱</span>
+                  <input id="petNameInput" type="text" placeholder="輸入新名稱" />
+                </label>
+                <button id="savePetNameButton" type="button" class="secondary-button">
+                  儲存名稱
+                </button>
+
+                <label class="field">
+                  <span>外觀</span>
+                  <select id="petSkinSelect">
+                    <option value="default">default</option>
+                    <option value="gold">gold</option>
+                    <option value="dark">dark</option>
+                  </select>
+                </label>
+                <button id="savePetSkinButton" type="button" class="secondary-button">
+                  儲存外觀
+                </button>
+              </div>
+            </div>
           </div>
 
           <p id="petMessage" class="message" hidden></p>
