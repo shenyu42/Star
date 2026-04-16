@@ -1260,14 +1260,20 @@ h3 {
     grid-row: 2;
   }
 
-  #petPanel {
+  #mailPanel {
     grid-column: 3;
     grid-row: 2;
+  }
+
+  #petPanel {
+    grid-column: 2 / 4;
+    grid-row: 3;
   }
 
   .couple-panel,
   #eventPanel,
   #photoPanel,
+  #mailPanel,
   #petPanel {
     padding: 22px;
   }
@@ -1331,9 +1337,22 @@ h3 {
   }
 
   .pet-hero {
-    grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
-    align-items: stretch;
-    gap: 16px;
+    grid-template-columns: minmax(0, 1.18fr) minmax(320px, 380px);
+    align-items: start;
+    gap: 18px;
+  }
+
+  .pet-stage,
+  .pet-stage-card {
+    min-width: 0;
+  }
+
+  .pet-stage-card {
+    height: auto;
+  }
+
+  .pet-animation-shell {
+    min-height: 320px;
   }
 
   .pet-actions-grid {
